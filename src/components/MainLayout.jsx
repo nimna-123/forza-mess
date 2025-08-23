@@ -70,7 +70,7 @@ const MainLayout = ({ onLogout, children }) => {
                 }`}
                 onClick={() => handleTabClick('summary')}
               >
-                Summary
+                Dashboard
                 {activeTab === 'summary' && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-5 h-0.5 bg-white rounded-full"></div>
                 )}

@@ -33,7 +33,7 @@ const Summary = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
         <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
           <div className="w-12 h-12 sm:w-15 sm:h-15 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
             <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none">
@@ -91,24 +91,7 @@ const Summary = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-          <div className="w-12 h-12 sm:w-15 sm:h-15 rounded-xl bg-gradient-to-br from-pink-400 to-yellow-400 flex items-center justify-center text-white flex-shrink-0">
-            <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none">
-              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="currentColor"/>
-            </svg>
-          </div>
-          <div className="text-center sm:text-left">
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1">
-              {stats.expiringSoon}
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">
-              Expiring Soon
-            </p>
-            <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-xl">
-              Requires attention
-            </span>
-          </div>
-        </div>
+
       </div>
 
       {/* Recent Activities */}
@@ -145,42 +128,7 @@ const Summary = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-5">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <button className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:-translate-y-0.5">
-            <svg width="16" height="16" className="sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline">Add New Customer</span>
-            <span className="sm:hidden">Add Customer</span>
-          </button>
-          <button className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:-translate-y-0.5">
-            <svg width="16" height="16" className="sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline">Add New Agent</span>
-            <span className="sm:hidden">Add Agent</span>
-          </button>
-          <button className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:-translate-y-0.5">
-            <svg width="16" height="16" className="sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline">View Reports</span>
-            <span className="sm:hidden">Reports</span>
-          </button>
-          <button className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:-translate-y-0.5">
-            <svg width="16" height="16" className="sm:w-5 sm:h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline">Manage Subscriptions</span>
-            <span className="sm:hidden">Subscriptions</span>
-          </button>
-        </div>
-      </div>
+      
     </div>
   );
 };
