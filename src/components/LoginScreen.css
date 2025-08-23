@@ -1,0 +1,227 @@
+/* Login Screen Container */
+.login-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Right Panel - Login Form */
+.login-form-panel {
+  flex: 0 0 40%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-form-content {
+  width: 100%;
+  max-width: 320px;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+}
+
+/* Logo Styles */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 60px;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333333;
+  letter-spacing: -0.5px;
+}
+
+/* Form Styles */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 25px;
+  font-size: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.form-input::placeholder {
+  color: transparent;
+  font-weight: 400;
+  transition: color 0.3s ease;
+}
+
+.form-input:focus::placeholder {
+  color: #999999;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #333333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Floating Label Styles */
+.input-label {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  padding: 0 8px;
+  color: #999999;
+  font-size: 16px;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.form-input:focus + .input-label,
+.form-input:not(:placeholder-shown) + .input-label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #333333;
+  font-weight: 500;
+}
+
+.form-input:focus + .input-label {
+  color: #333333;
+}
+
+/* Login Button */
+.login-button {
+  width: 100%;
+  padding: 16px 20px;
+  background: #333333;
+  color: #ffffff;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.login-button:hover {
+  background: #222222;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* Copyright */
+.copyright {
+  position: absolute;
+  bottom: 30px;
+  left: 40px;
+  font-size: 12px;
+  color: #999999;
+  font-weight: 400;
+}
+
+/* Left Panel - Food Image */
+.food-image-panel {
+  flex: 0 0 60%;
+  background: #2a2a2a;
+  position: relative;
+  border-radius: 0 30px 0 0;
+  overflow: hidden;
+}
+
+.food-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.food-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0 30px 0 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+  
+  .food-image-panel {
+    flex: 0 0 40%;
+    border-radius: 30px 30px 0 0;
+  }
+  
+  .login-form-panel {
+    flex: 0 0 60%;
+  }
+  
+  .food-image {
+    border-radius: 30px 30px 0 0;
+  }
+  
+  .login-form-content {
+    padding: 0 30px;
+  }
+  
+  .copyright {
+    left: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form-content {
+    padding: 0 20px;
+  }
+  
+  .copyright {
+    left: 20px;
+  }
+  
+  .logo {
+    margin-bottom: 40px;
+  }
+  
+  .login-form {
+    gap: 15px;
+  }
+}
