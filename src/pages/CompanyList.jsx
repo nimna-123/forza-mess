@@ -1,156 +1,159 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Switch from '../components/Switch';
-import AgentDetailsModal from '../components/AgentDetailsModal';
+import CompanyDetailsModal from '../components/CompanyDetailsModal';
 
-const AgentList = () => {
+const CompanyList = () => {
   const navigate = useNavigate();
-  // Sample agent data - in a real app, this would come from an API
-  const [agents] = useState([
+  // Sample company data - in a real app, this would come from an API
+  const [companies] = useState([
     {
       id: 1,
-      agentId: 'AGT001',
-      name: 'Ahmed Hassan',
+      companyId: 'CMP001',
+      name: 'Tech Solutions Ltd',
+      contactPerson: 'Ahmed Hassan',
       mobile: '+971 50 111 2222',
-      address: 'Dubai Marina, Tower 2, Apt 1201, Dubai',
-      joinedDate: '2023-06-15',
-      commission: 'AED 2,500.00',
-      creditLimit: 'AED 30,000',
-      dueDays: 30,
-      breakfastPrice: 'AED 20',
-      lunchPrice: 'AED 35',
-      dinnerPrice: 'AED 45',
+      address: 'Dubai Internet City, Building 3, Floor 5, Dubai',
+      registeredDate: '2023-06-15',
+      tradeLicense: 'TL-2023-001234',
+      taxNumber: 'TRN-123456789',
+      breakfastPrice: 'AED 25',
+      lunchPrice: 'AED 45',
+      dinnerPrice: 'AED 55',
+      creditLimit: 'AED 50,000',
+      creditDays: 30,
       status: 'Active',
-      customersCount: 45
+      employeesCount: 45
     },
     {
       id: 2,
-      agentId: 'AGT002',
-      name: 'Fatima Al Mansouri',
+      companyId: 'CMP002',
+      name: 'Global Trading Co',
+      contactPerson: 'Fatima Al Mansouri',
       mobile: '+971 55 222 3333',
-      address: 'Abu Dhabi Corniche, Marina Heights, Abu Dhabi',
-      joinedDate: '2023-08-20',
-      commission: 'AED 3,200.00',
-      creditLimit: 'AED 50,000',
-      dueDays: 45,
-      breakfastPrice: 'AED 25',
-      lunchPrice: 'AED 40',
-      dinnerPrice: 'AED 50',
+      address: 'Abu Dhabi Business District, Tower A, Abu Dhabi',
+      registeredDate: '2023-08-20',
+      tradeLicense: 'TL-2023-005678',
+      taxNumber: 'TRN-987654321',
+      breakfastPrice: 'AED 30',
+      lunchPrice: 'AED 50',
+      dinnerPrice: 'AED 60',
+      creditLimit: 'AED 75,000',
+      creditDays: 45,
       status: 'Active',
-      customersCount: 52
+      employeesCount: 52
     },
     {
       id: 3,
-      agentId: 'AGT003',
-      name: 'Omar Khalil',
+      companyId: 'CMP003',
+      name: 'Innovation Systems',
+      contactPerson: 'Omar Khalil',
       mobile: '+971 52 333 4444',
-      address: 'Sharjah Al Majaz, Waterfront Tower, Sharjah',
-      joinedDate: '2023-09-10',
-      commission: 'AED 1,800.00',
-      creditLimit: 'AED 20,000',
-      dueDays: 15,
-      breakfastPrice: 'AED 18',
-      lunchPrice: 'AED 32',
-      dinnerPrice: 'AED 42',
+      address: 'Sharjah Technology Park, Block B, Sharjah',
+      registeredDate: '2023-09-10',
+      tradeLicense: 'TL-2023-009876',
+      taxNumber: 'TRN-456789123',
+      breakfastPrice: 'AED 20',
+      lunchPrice: 'AED 40',
+      dinnerPrice: 'AED 50',
+      creditLimit: 'AED 25,000',
+      creditDays: 15,
       status: 'Inactive',
-      customersCount: 28
+      employeesCount: 28
     },
     {
       id: 4,
-      agentId: 'AGT004',
-      name: 'Aisha Rahman',
+      companyId: 'CMP004',
+      name: 'Digital Dynamics',
+      contactPerson: 'Aisha Rahman',
       mobile: '+971 56 444 5555',
       address: 'Dubai Silicon Oasis, Building A, Dubai',
-      joinedDate: '2023-11-05',
-      commission: 'AED 2,900.00',
-      creditLimit: 'AED 40,000',
-      dueDays: 30,
-      breakfastPrice: 'AED 22',
-      lunchPrice: 'AED 38',
-      dinnerPrice: 'AED 48',
+      registeredDate: '2023-11-05',
+      tradeLicense: 'TL-2023-012345',
+      taxNumber: 'TRN-789123456',
+      breakfastPrice: 'AED 28',
+      lunchPrice: 'AED 48',
+      dinnerPrice: 'AED 58',
+      creditLimit: 'AED 60,000',
+      creditDays: 30,
       status: 'Active',
-      customersCount: 38
+      employeesCount: 38
     },
     {
       id: 5,
-      agentId: 'AGT005',
-      name: 'Youssef Ibrahim',
+      companyId: 'CMP005',
+      name: 'Future Technologies',
+      contactPerson: 'Youssef Ibrahim',
       mobile: '+971 54 555 6666',
-      address: 'Ajman Corniche, Beach Tower, Ajman',
-      joinedDate: '2024-01-12',
-      commission: 'AED 2,100.00',
-      creditLimit: 'AED 25,000',
-      dueDays: 20,
-      breakfastPrice: 'AED 19',
-      lunchPrice: 'AED 34',
-      dinnerPrice: 'AED 44',
+      address: 'Ajman Free Zone, Technology Hub, Ajman',
+      registeredDate: '2024-01-12',
+      tradeLicense: 'TL-2024-001111',
+      taxNumber: 'TRN-111222333',
+      breakfastPrice: 'AED 22',
+      lunchPrice: 'AED 42',
+      dinnerPrice: 'AED 52',
+      creditLimit: 'AED 35,000',
+      creditDays: 20,
       status: 'Active',
-      customersCount: 31
+      employeesCount: 31
     }
   ]);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+
 
   const [columnWidths, setColumnWidths] = useState({
-    agentId: 120,
-    name: 150,
-    mobile: 140,
-    address: 250,
-    joinedDate: 120,
+    companyId: 140,
+    name: 250,
+    contactPerson: 200,
+    mobile: 160,
     actions: 120
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [agentStatuses, setAgentStatuses] = useState({
-    'AGT001': true,
-    'AGT002': true,
-    'AGT003': false,
-    'AGT004': true,
-    'AGT005': true
+  const [companyStatuses, setCompanyStatuses] = useState({
+    'CMP001': true,
+    'CMP002': true,
+    'CMP003': false,
+    'CMP004': true,
+    'CMP005': true
   });
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const tableRef = useRef(null);
   const resizingRef = useRef(null);
 
-  const handleEdit = (agentId) => {
-    console.log('Edit agent:', agentId);
+  const handleEdit = (companyId) => {
+    console.log('Edit company:', companyId);
     // Add edit functionality here
   };
 
-  const handleAddAgent = () => {
-    navigate('/add-agent');
+  const handleAddCompany = () => {
+    navigate('/add-company');
   };
 
   const handleAddOrders = () => {
     navigate('/add-order');
   };
 
-  const handleRowClick = (agent) => {
-    setSelectedAgent(agent);
+  const handleRowClick = (company) => {
+    setSelectedCompany(company);
     setIsDetailsModalOpen(true);
   };
 
-  const handleStatusChange = (agentId, newStatus) => {
-    setAgentStatuses(prev => ({
+  const handleStatusChange = (companyId, newStatus) => {
+    setCompanyStatuses(prev => ({
       ...prev,
-      [agentId]: newStatus
+      [companyId]: newStatus
     }));
     
-    console.log(`Agent ${agentId} status changed to: ${newStatus ? 'Active' : 'Inactive'}`);
+    console.log(`Company ${companyId} status changed to: ${newStatus ? 'Active' : 'Inactive'}`);
   };
 
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.agentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.mobile.includes(searchTerm)
+  const filteredCompanies = companies.filter(company =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.companyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.mobile.includes(searchTerm)
   );
 
   const startResize = (e, columnKey) => {
@@ -186,8 +189,7 @@ const AgentList = () => {
   return (
     <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50">
 
-
-      {/* Search and Add Agent Section */}
+      {/* Search and Add Company Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         {/* Left Section - Search Bar */}
         <div className="flex-1 max-w-md">
@@ -199,7 +201,7 @@ const AgentList = () => {
             </div>
             <input
               type="text"
-              placeholder="Search agents..."
+              placeholder="Search companies..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="block w-full pl-12 pr-12 py-2 sm:py-2.5 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm sm:text-base bg-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -230,77 +232,66 @@ const AgentList = () => {
             <span>Add Orders</span>
           </button>
 
-          {/* Add Agent Button */}
+          {/* Add Company Button */}
           <button
-            onClick={handleAddAgent}
+            onClick={handleAddCompany}
             className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm sm:text-base"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span>Add Agent</span>
+            <span>Add Company</span>
           </button>
         </div>
       </div>
 
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[1200px]" ref={tableRef}>
+                     <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[850px]" ref={tableRef}>
             <thead className="bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-700">
               <tr>
                 <th 
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.agentId }}
+                  style={{ width: columnWidths.companyId }}
                 >
-                  Agent ID
+                  Company ID
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'agentId')}
+                    onMouseDown={(e) => startResize(e, 'companyId')}
                   ></div>
                 </th>
                 <th 
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.name }}
                 >
-                  Name
+                  Company Name
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
                     onMouseDown={(e) => startResize(e, 'name')}
                   ></div>
                 </th>
-                                 <th 
-                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                   style={{ width: columnWidths.mobile }}
-                 >
-                   Mobile
-                   <div 
-                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                     onMouseDown={(e) => startResize(e, 'mobile')}
-                   ></div>
-                 </th>
                 <th 
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.address }}
+                  style={{ width: columnWidths.contactPerson }}
                 >
-                  Address
+                  Contact Person
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'address')}
+                    onMouseDown={(e) => startResize(e, 'contactPerson')}
                   ></div>
                 </th>
-                                                  <th 
-                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                   style={{ width: columnWidths.joinedDate }}
-                 >
-                   Joined Date
-                   <div 
-                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                     onMouseDown={(e) => startResize(e, 'joinedDate')}
-                   ></div>
-                 </th>
-                                 
                 <th 
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                  style={{ width: columnWidths.mobile }}
+                >
+                  Mobile
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                    onMouseDown={(e) => startResize(e, 'mobile')}
+                  ></div>
+                </th>
+                <th 
+                  className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.actions }}
                 >
                   Actions
@@ -312,34 +303,30 @@ const AgentList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredAgents.map((agent) => (
-                <tr 
-                  key={agent.id} 
-                  className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"
-                  onClick={() => handleRowClick(agent)}
-                >
+                             {filteredCompanies.map((company) => (
+                 <tr 
+                   key={company.id} 
+                   className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"
+                   onClick={() => handleRowClick(company)}
+                 >
                   <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
-                    {agent.agentId}
+                    {company.companyId}
                   </td>
                   <td className="p-3 sm:p-4 align-middle font-medium text-gray-800">
-                    {agent.name}
+                    {company.name}
                   </td>
-                                     <td className="p-3 sm:p-4 align-middle text-gray-600 font-mono">
-                     {agent.mobile}
-                   </td>
-                  <td className="p-3 sm:p-4 align-middle text-gray-600 text-xs max-w-[200px] break-words">
-                    {agent.address}
+                  <td className="p-3 sm:p-4 align-middle text-gray-600">
+                    {company.contactPerson}
                   </td>
-                                                        <td className="p-3 sm:p-4 align-middle text-gray-600 text-xs">
-                     {formatDate(agent.joinedDate)}
-                   </td>
-                  
-                                     <td className="p-3 sm:p-4 align-middle text-center">
-                     <div className="flex justify-center items-center" onClick={(e) => e.stopPropagation()}>
+                  <td className="p-3 sm:p-4 align-middle text-gray-600 font-mono">
+                    {company.mobile}
+                  </td>
+                                     <td className="p-3 sm:p-4 align-middle">
+                     <div className="flex justify-center items-center w-full h-full" onClick={(e) => e.stopPropagation()}>
                        {/* Status Switch */}
                        <Switch
-                         checked={agentStatuses[agent.agentId]}
-                         onChange={(newStatus) => handleStatusChange(agent.agentId, newStatus)}
+                         checked={companyStatuses[company.companyId]}
+                         onChange={(newStatus) => handleStatusChange(company.companyId, newStatus)}
                          size="sm"
                        />
                      </div>
@@ -351,14 +338,14 @@ const AgentList = () => {
                  </div>
        </div>
 
-       {/* Agent Details Modal */}
-       <AgentDetailsModal
+       {/* Company Details Modal */}
+       <CompanyDetailsModal
          isOpen={isDetailsModalOpen}
          onClose={() => setIsDetailsModalOpen(false)}
-         agent={selectedAgent}
+         company={selectedCompany}
        />
      </div>
    );
  };
 
-export default AgentList;
+export default CompanyList;

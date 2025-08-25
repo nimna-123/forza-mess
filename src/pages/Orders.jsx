@@ -12,6 +12,7 @@ const Orders = () => {
       customerId: 'CUST001',
       customerName: 'John Smith',
       customerMobile: '+971 50 123 4567',
+      customerType: 'Individual',
       breakfast: 2,
       lunch: 1,
       dinner: 3,
@@ -27,6 +28,7 @@ const Orders = () => {
       customerId: 'CUST002',
       customerName: 'Sarah Johnson',
       customerMobile: '+971 55 234 5678',
+      customerType: 'Company',
       breakfast: 1,
       lunch: 2,
       dinner: 1,
@@ -42,6 +44,7 @@ const Orders = () => {
       customerId: 'CUST003',
       customerName: 'Michael Brown',
       customerMobile: '+971 52 345 6789',
+      customerType: 'Agent',
       breakfast: 0,
       lunch: 3,
       dinner: 2,
@@ -57,6 +60,7 @@ const Orders = () => {
       customerId: 'CUST004',
       customerName: 'Emily Davis',
       customerMobile: '+971 56 456 7890',
+      customerType: 'Individual',
       breakfast: 1,
       lunch: 1,
       dinner: 1,
@@ -72,6 +76,7 @@ const Orders = () => {
       customerId: 'CUST005',
       customerName: 'David Wilson',
       customerMobile: '+971 54 567 8901',
+      customerType: 'Customer',
       breakfast: 2,
       lunch: 0,
       dinner: 2,
@@ -84,9 +89,11 @@ const Orders = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('All');
   const [columnWidths, setColumnWidths] = useState({
     orderId: 120,
     customer: 200,
+    type: 120,
     breakfast: 120,
     lunch: 120,
     dinner: 120,
@@ -196,11 +203,10 @@ const Orders = () => {
       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerId.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    const matchesCompany = companyFilter === 'All' || order.customerType === companyFilter;
+    
+    return matchesSearch && matchesCompany;
   });
-
-
-
   return (
     <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50">
        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
@@ -242,16 +248,43 @@ const Orders = () => {
         </button>
       </div>
 
-      {/* Meal Summary */}
-      <div className="mb-6 flex flex-wrap justify-center gap-6">
-        <div className="inline-flex items-center px-6 py-4 rounded-xl text-base font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
-          Breakfast: {orders.reduce((sum, order) => sum + order.breakfast, 0)}
+      {/* Meal Summary and Filter Row */}
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        {/* Meal Summary - Left Side */}
+        <div className="flex flex-wrap gap-4">
+          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
+            Breakfast: {orders.reduce((sum, order) => sum + order.breakfast, 0)}
+          </div>
+          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
+            Lunch: {orders.reduce((sum, order) => sum + order.lunch, 0)}
+          </div>
+          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
+            Dinner: {orders.reduce((sum, order) => sum + order.dinner, 0)}
+          </div>
         </div>
-        <div className="inline-flex items-center px-6 py-4 rounded-xl text-base font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
-          Lunch: {orders.reduce((sum, order) => sum + order.lunch, 0)}
-        </div>
-        <div className="inline-flex items-center px-6 py-4 rounded-xl text-base font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
-          Dinner: {orders.reduce((sum, order) => sum + order.dinner, 0)}
+
+        {/* Company Filter - Right Side */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+          <div className="relative bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <select
+              value={companyFilter}
+              onChange={(e) => setCompanyFilter(e.target.value)}
+              className="block w-full px-6 py-3 pr-12 text-sm font-medium text-gray-700 bg-transparent border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 appearance-none cursor-pointer min-w-[200px] hover:text-indigo-600 transition-colors duration-200"
+            >
+              <option value="All">All</option>
+              <option value="Individual">👤 Individual</option>
+              <option value="Company">🏢 Company</option>
+              <option value="Agent">🤝 Agent</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+              <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -279,6 +312,16 @@ const Orders = () => {
                   <div 
                     className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
                     onMouseDown={(e) => startResize(e, 'customer')}
+                  ></div>
+                </th>
+                <th 
+                  className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                  style={{ width: columnWidths.type }}
+                >
+                  Type
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                    onMouseDown={(e) => startResize(e, 'type')}
                   ></div>
                 </th>
                 <th 
@@ -335,6 +378,28 @@ const Orders = () => {
                       <div className="text-sm text-gray-500 font-mono">{order.customerId}</div>
                       <div className="text-xs text-gray-400">{order.customerMobile}</div>
                     </div>
+                  </td>
+                  <td className="p-3 sm:p-4 align-middle text-center">
+                    {order.customerType === 'Individual' && (
+                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 shadow-sm">
+                        👤 Individual
+                      </div>
+                    )}
+                    {order.customerType === 'Company' && (
+                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
+                        🏢 Company
+                      </div>
+                    )}
+                    {order.customerType === 'Agent' && (
+                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-sm">
+                        🤝 Agent
+                      </div>
+                    )}
+                    {order.customerType === 'Customer' && (
+                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm">
+                        👥 Customer
+                      </div>
+                    )}
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.breakfast > 0 ? (

@@ -328,7 +328,7 @@ const IndividualCustomerList = () => {
                    </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     <span className="font-bold text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-lg px-3 py-2 inline-block min-w-[40px] shadow-md text-lg">
-                      {customer.mealsQuantity}
+                      {customer.mealsQuantity} ({customer.mealsQuantity === 3 ? 'B,L,D' : customer.mealsQuantity === 2 ? 'L,D' : customer.mealsQuantity})
                     </span>
                   </td>
                                      <td className="p-3 sm:p-4 align-middle text-center">

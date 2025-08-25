@@ -5,8 +5,10 @@ import MainLayout from './components/MainLayout';
 import Summary from './pages/Summary';
 import IndividualCustomerList from './pages/individualCustomerList';
 import AgentList from './pages/AgentList';
+import CompanyList from './pages/CompanyList';
 import AddCustomer from './pages/AddCustomer';
 import AddAgent from './pages/AddAgent';
+import AddCompany from './pages/AddCompany';
 import AddOrder from './pages/AddOrder';
 import Orders from './pages/Orders';
 import './App.css';
@@ -126,6 +128,26 @@ const App = () => {
               isLoggedIn ? 
                 <MainLayout onLogout={handleLogout}>
                   <AddAgent />
+                </MainLayout> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
+            path="/company" 
+            element={
+              isLoggedIn ? 
+                <MainLayout onLogout={handleLogout}>
+                  <CompanyList />
+                </MainLayout> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
+            path="/add-company" 
+            element={
+              isLoggedIn ? 
+                <MainLayout onLogout={handleLogout}>
+                  <AddCompany />
                 </MainLayout> : 
                 <Navigate to="/login" replace />
             } 

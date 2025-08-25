@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 
 const AddOrder = () => {
   const navigate = useNavigate();
@@ -13,9 +14,7 @@ const AddOrder = () => {
     { id: 5, customerId: 'CUST005', name: 'David Wilson', mobile: '+971 54 567 8901' }
   ]);
 
-  const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [mealInputs, setMealInputs] = useState({
     breakfast: '',
     lunch: '',
@@ -23,47 +22,79 @@ const AddOrder = () => {
   });
   
   const [orders, setOrders] = useState([]);
-  const customerInputRef = useRef(null);
-  const dropdownRef = useRef(null);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [editForm, setEditForm] = useState({
+    breakfast: '',
+    lunch: '',
+    dinner: ''
+  });
 
-  const handleCustomerChange = (e) => {
-    setSelectedCustomer(e.target.value);
-  };
+  // Transform customers data for react-select
+  const customerOptions = customers.map(customer => ({
+    value: customer.customerId,
+    label: customer.name,
+    customer: customer
+  }));
 
-  const handleCustomerSearch = (e) => {
-    setCustomerSearch(e.target.value);
-    setIsCustomerDropdownOpen(true);
-  };
-
-  const handleCustomerSelect = (customer) => {
-    setSelectedCustomer(customer.customerId);
-    setCustomerSearch(customer.name);
-    setIsCustomerDropdownOpen(false);
-  };
-
-  const handleCustomerInputFocus = () => {
-    setIsCustomerDropdownOpen(true);
-  };
-
-  const handleCustomerInputBlur = () => {
-    // Delay closing to allow for click events
-    setTimeout(() => setIsCustomerDropdownOpen(false), 200);
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (customerInputRef.current && !customerInputRef.current.contains(event.target) &&
-          dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsCustomerDropdownOpen(false);
+  // Custom styles for react-select
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '48px',
+      border: state.isFocused ? '2px solid #6366f1' : '1px solid #d1d5db',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 3px rgba(99, 102, 241, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #6366f1'
       }
-    };
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected 
+        ? '#6366f1' 
+        : state.isFocused 
+        ? '#f3f4f6' 
+        : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      padding: '12px 16px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#6366f1' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb',
+      zIndex: 9999,
+      position: 'absolute'
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '200px'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151',
+      fontWeight: '500'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    })
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // Custom option component to show only customer name
+  const CustomOption = ({ data, innerProps }) => (
+    <div {...innerProps} className="px-4 py-3 hover:bg-indigo-50 cursor-pointer">
+      <div className="font-medium text-gray-900">{data.label}</div>
+    </div>
+  );
+
+  const handleCustomerChange = (selectedOption) => {
+    setSelectedCustomer(selectedOption);
+  };
 
   const handleMealInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,11 +121,11 @@ const AddOrder = () => {
       return;
     }
 
-    const customer = customers.find(c => c.customerId === selectedCustomer);
+    const customer = selectedCustomer.customer;
     
     const newOrder = {
       id: Date.now(),
-      customerId: selectedCustomer,
+      customerId: selectedCustomer.value,
       customerName: customer.name,
       customerMobile: customer.mobile,
       breakfast: parseInt(mealInputs.breakfast || 0),
@@ -107,9 +138,58 @@ const AddOrder = () => {
     setOrders(prev => [...prev, newOrder]);
     
     // Reset form
-    setSelectedCustomer('');
-    setCustomerSearch('');
+    setSelectedCustomer(null);
     setMealInputs({ breakfast: '', lunch: '', dinner: '' });
+  };
+
+  const handleEditOrder = (order) => {
+    setEditingOrder(order);
+    setEditForm({
+      breakfast: order.breakfast.toString(),
+      lunch: order.lunch.toString(),
+      dinner: order.dinner.toString()
+    });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    // Only allow positive numbers
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setEditForm(prev => ({
+      ...prev,
+      [name]: numericValue
+    }));
+  };
+
+  const handleSaveEdit = () => {
+    const totalMeals = parseInt(editForm.breakfast || 0) + 
+                      parseInt(editForm.lunch || 0) + 
+                      parseInt(editForm.dinner || 0);
+
+    if (totalMeals === 0) {
+      alert('Please enter at least one meal quantity');
+      return;
+    }
+
+    setOrders(prev => prev.map(order => 
+      order.id === editingOrder.id 
+        ? {
+            ...order,
+            breakfast: parseInt(editForm.breakfast || 0),
+            lunch: parseInt(editForm.lunch || 0),
+            dinner: parseInt(editForm.dinner || 0),
+            total: totalMeals
+          }
+        : order
+    ));
+
+    setEditingOrder(null);
+    setEditForm({ breakfast: '', lunch: '', dinner: '' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingOrder(null);
+    setEditForm({ breakfast: '', lunch: '', dinner: '' });
   };
 
   const handleCancel = () => {
@@ -147,67 +227,25 @@ const AddOrder = () => {
             {/* Single Row Input */}
             <div className="flex flex-col lg:flex-row gap-4 items-end">
                              {/* Customer Selection */}
-               <div className="flex-1 relative z-10">
+               <div className="flex-1 relative z-50">
                  <label className="block text-sm font-medium text-gray-700 mb-2">
                    Customer
                  </label>
-                 <div className="relative">
-                                     <input
-                     ref={customerInputRef}
-                     id="customer-search-input"
-                     type="text"
-                     value={customerSearch}
-                     onChange={handleCustomerSearch}
-                     onFocus={handleCustomerInputFocus}
-                     onBlur={handleCustomerInputBlur}
-                     placeholder="Type customer name to search..."
-                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white pr-10"
-                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  
-                                     {/* Dropdown */}
-                   {isCustomerDropdownOpen && (
-                     <div 
-                       ref={dropdownRef}
-                       className="fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-2xl max-h-60 overflow-y-auto"
-                       style={{
-                         top: customerInputRef.current ? customerInputRef.current.getBoundingClientRect().bottom + 5 : 0,
-                         left: customerInputRef.current ? customerInputRef.current.getBoundingClientRect().left : 0,
-                         width: customerInputRef.current ? customerInputRef.current.offsetWidth : 'auto',
-                         minWidth: '300px'
-                       }}
-                     >
-                       {customers
-                         .filter(customer => 
-                           customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                           customer.customerId.toLowerCase().includes(customerSearch.toLowerCase())
-                         )
-                         .map(customer => (
-                           <div
-                             key={customer.id}
-                             onClick={() => handleCustomerSelect(customer)}
-                             className="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
-                           >
-                             <div className="font-medium text-gray-900">{customer.name}</div>
-                             <div className="text-sm text-gray-500 font-mono">{customer.customerId}</div>
-                             <div className="text-xs text-gray-400">{customer.mobile}</div>
-                           </div>
-                         ))}
-                       {customers.filter(customer => 
-                         customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                         customer.customerId.toLowerCase().includes(customerSearch.toLowerCase())
-                       ).length === 0 && (
-                         <div className="px-4 py-3 text-gray-500 text-center">
-                           No customers found
-                         </div>
-                       )}
-                     </div>
-                   )}
-                </div>
+                 <Select
+                   value={selectedCustomer}
+                   onChange={handleCustomerChange}
+                   options={customerOptions}
+                   placeholder="Select a customer..."
+                   isClearable
+                   isSearchable
+                   styles={customStyles}
+                   components={{
+                     Option: CustomOption
+                   }}
+                   noOptionsMessage={() => "No customers found"}
+                   loadingMessage={() => "Loading customers..."}
+                   menuPosition="fixed"
+                 />
               </div>
 
               {/* Meal Input Fields */}
@@ -318,40 +356,113 @@ const AddOrder = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {order.breakfast > 0 && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                            {order.breakfast}
+                        {editingOrder?.id === order.id ? (
+                          <input
+                            type="text"
+                            name="breakfast"
+                            value={editForm.breakfast}
+                            onChange={handleEditFormChange}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                          />
+                        ) : (
+                          order.breakfast > 0 && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                              {order.breakfast}
+                            </span>
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {editingOrder?.id === order.id ? (
+                          <input
+                            type="text"
+                            name="lunch"
+                            value={editForm.lunch}
+                            onChange={handleEditFormChange}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                          />
+                        ) : (
+                          order.lunch > 0 && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                              {order.lunch}
+                            </span>
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {editingOrder?.id === order.id ? (
+                          <input
+                            type="text"
+                            name="dinner"
+                            value={editForm.dinner}
+                            onChange={handleEditFormChange}
+                            className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                          />
+                        ) : (
+                          order.dinner > 0 && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                              {order.dinner}
+                            </span>
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {editingOrder?.id === order.id ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
+                            {parseInt(editForm.breakfast || 0) + parseInt(editForm.lunch || 0) + parseInt(editForm.dinner || 0)}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
+                            {order.total}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {order.lunch > 0 && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            {order.lunch}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {order.dinner > 0 && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            {order.dinner}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
-                          {order.total}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => removeOrder(order.id)}
-                          className="text-red-600 hover:text-red-900 transition-colors duration-200"
-                        >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        <div className="flex justify-center space-x-2">
+                          {editingOrder?.id === order.id ? (
+                            <>
+                              <button
+                                onClick={handleSaveEdit}
+                                className="text-green-600 hover:text-green-900 transition-colors duration-200"
+                                title="Save changes"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                                title="Cancel edit"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEditOrder(order)}
+                                className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
+                                title="Edit order"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => removeOrder(order.id)}
+                                className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                title="Delete order"
+                              >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -11,6 +11,7 @@ const MainLayout = ({ onLogout, children }) => {
     if (path === '/individual' || path === '/add-customer') return 'individual';
     if (path === '/agent' || path === '/add-agent') return 'agent';
     if (path === '/orders' || path === '/add-order') return 'orders';
+    if (path === '/company') return 'company';
     return 'summary';
   };
 
@@ -27,6 +28,9 @@ const MainLayout = ({ onLogout, children }) => {
         break;
       case 'orders':
         navigate('/orders');
+        break;
+      case 'company':
+        navigate('/company');
         break;
       default:
         navigate('/summary');
@@ -80,6 +84,22 @@ const MainLayout = ({ onLogout, children }) => {
               </button>
               <button 
                 className={`px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 relative group ${
+                  activeTab === 'orders' 
+                    ? 'text-white font-semibold' 
+                    : 'text-white text-opacity-80 hover:text-white'
+                }`}
+                onClick={() => handleTabClick('orders')}
+              >
+                Orders
+                {activeTab === 'orders' && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-5 h-0.5 bg-white rounded-full"></div>
+                )}
+                {activeTab !== 'orders' && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:w-5"></div>
+                )}
+              </button>
+              <button 
+                className={`px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 relative group ${
                   activeTab === 'individual' 
                     ? 'text-white font-semibold' 
                     : 'text-white text-opacity-80 hover:text-white'
@@ -110,19 +130,20 @@ const MainLayout = ({ onLogout, children }) => {
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:w-5"></div>
                 )}
               </button>
+              
               <button 
                 className={`px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 relative group ${
-                  activeTab === 'orders' 
+                  activeTab === 'company' 
                     ? 'text-white font-semibold' 
                     : 'text-white text-opacity-80 hover:text-white'
                 }`}
-                onClick={() => handleTabClick('orders')}
+                onClick={() => handleTabClick('company')}
               >
-                Orders
-                {activeTab === 'orders' && (
+                Company
+                {activeTab === 'company' && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-5 h-0.5 bg-white rounded-full"></div>
                 )}
-                {activeTab !== 'orders' && (
+                {activeTab !== 'company' && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:w-5"></div>
                 )}
               </button>

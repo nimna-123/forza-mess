@@ -14,7 +14,6 @@ const AddCustomer = () => {
     joinedDate: '',
     price: '',
     paymentMode: 'Card',
-    dietaryPreference: 'veg',
     meals: {
       breakfast: true,
       lunch: true,
@@ -51,12 +50,7 @@ const AddCustomer = () => {
     }));
   };
 
-  const handleDietaryPreferenceChange = (preference) => {
-    setFormData(prevState => ({
-      ...prevState,
-      dietaryPreference: preference
-    }));
-  };
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -117,7 +111,6 @@ const AddCustomer = () => {
           joinedDate: '',
           price: '',
           paymentMode: 'Card',
-          dietaryPreference: 'veg',
           meals: {
             breakfast: true,
             lunch: true,
@@ -417,36 +410,7 @@ const AddCustomer = () => {
                  )}
                </div>
 
-               {/* Dietary Preference */}
-               <div className="md:col-span-2">
-                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                   Dietary Preference *
-                 </label>
-                 <div className="flex gap-6">
-                   <label className="flex items-center gap-3 cursor-pointer">
-                     <input
-                       type="radio"
-                       name="dietaryPreference"
-                       value="veg"
-                       checked={formData.dietaryPreference === 'veg'}
-                       onChange={(e) => handleDietaryPreferenceChange(e.target.value)}
-                       className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                     />
-                     <span className="text-gray-700">Vegetarian</span>
-                   </label>
-                   <label className="flex items-center gap-3 cursor-pointer">
-                     <input
-                       type="radio"
-                       name="dietaryPreference"
-                       value="non-veg"
-                       checked={formData.dietaryPreference === 'non-veg'}
-                       onChange={(e) => handleDietaryPreferenceChange(e.target.value)}
-                       className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                     />
-                     <span className="text-gray-700">Non-Vegetarian</span>
-                   </label>
-                 </div>
-               </div>
+
             </div>
 
             {/* Action Buttons */}

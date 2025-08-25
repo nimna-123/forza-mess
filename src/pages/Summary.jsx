@@ -7,7 +7,7 @@ const Summary = () => {
     activeCustomers: 1180,
     totalAgents: 25,
     activeAgents: 22,
-    totalRevenue: 'AED 2,450,000',
+    totalCompanies: 'AED 2,45',
     monthlyRevenue: 'AED 185,000',
     expiringSoon: 45,
     newThisMonth: 89
@@ -45,11 +45,9 @@ const Summary = () => {
               {stats.totalCustomers.toLocaleString()}
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">
-              Total Customers
+              Total Individual Customers
             </p>
-            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-xl">
-              +{stats.newThisMonth} this month
-            </span>
+           
           </div>
         </div>
 
@@ -66,28 +64,24 @@ const Summary = () => {
             <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">
               Total Agents
             </p>
-            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-xl">
-              {stats.activeAgents} active
-            </span>
+           
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
           <div className="w-12 h-12 sm:w-15 sm:h-15 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white flex-shrink-0">
             <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none">
-              <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" fill="currentColor"/>
+              <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10z" fill="currentColor"/>
             </svg>
           </div>
           <div className="text-center sm:text-left">
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1">
-              {stats.totalRevenue}
+              {stats.totalCompanies}
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2">
-              Total Revenue
+              Total Companies
             </p>
-            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-xl">
-              +{stats.monthlyRevenue} this month
-            </span>
+          
           </div>
         </div>
 

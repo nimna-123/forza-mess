@@ -9,7 +9,11 @@ const AddAgent = () => {
     mobile: '',
     address: '',
     joinedDate: '',
-    members: ''
+    breakfastPrice: '',
+    lunchPrice: '',
+    dinnerPrice: '',
+    creditLimit: '',
+    creditDays: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -52,10 +56,34 @@ const AddAgent = () => {
       newErrors.joinedDate = 'Joined date is required';
     }
 
-    if (!formData.members.trim()) {
-      newErrors.members = 'Number of members is required';
-    } else if (!/^\d+$/.test(formData.members) || parseInt(formData.members) < 0) {
-      newErrors.members = 'Please enter a valid positive number';
+    if (!formData.breakfastPrice.trim()) {
+      newErrors.breakfastPrice = 'Breakfast price is required';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.breakfastPrice) || parseFloat(formData.breakfastPrice) < 0) {
+      newErrors.breakfastPrice = 'Please enter a valid price (e.g., 25.50)';
+    }
+
+    if (!formData.lunchPrice.trim()) {
+      newErrors.lunchPrice = 'Lunch price is required';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.lunchPrice) || parseFloat(formData.lunchPrice) < 0) {
+      newErrors.lunchPrice = 'Please enter a valid price (e.g., 35.00)';
+    }
+
+    if (!formData.dinnerPrice.trim()) {
+      newErrors.dinnerPrice = 'Dinner price is required';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.dinnerPrice) || parseFloat(formData.dinnerPrice) < 0) {
+      newErrors.dinnerPrice = 'Please enter a valid price (e.g., 45.75)';
+    }
+
+    if (!formData.creditLimit.trim()) {
+      newErrors.creditLimit = 'Credit limit is required';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.creditLimit) || parseFloat(formData.creditLimit) < 0) {
+      newErrors.creditLimit = 'Please enter a valid amount (e.g., 5000.00)';
+    }
+
+    if (!formData.creditDays.trim()) {
+      newErrors.creditDays = 'Due days is required';
+    } else if (!/^\d+$/.test(formData.creditDays) || parseInt(formData.creditDays) < 0) {
+      newErrors.creditDays = 'Please enter a valid number of days';
     }
 
     setErrors(newErrors);
@@ -83,7 +111,11 @@ const AddAgent = () => {
         mobile: '',
         address: '',
         joinedDate: '',
-        members: ''
+        breakfastPrice: '',
+        lunchPrice: '',
+        dinnerPrice: '',
+        creditLimit: '',
+        creditDays: ''
       });
       
       alert('Agent added successfully!');
@@ -108,7 +140,8 @@ const AddAgent = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 lg:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* First Row - Name and Mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -146,9 +179,12 @@ const AddAgent = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
                 )}
               </div>
+            </div>
 
+            {/* Rest of the form */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Address */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 lg:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Address *
                 </label>
@@ -166,43 +202,133 @@ const AddAgent = () => {
                 )}
               </div>
 
-                             {/* Joined Date */}
-               <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                   Joined Date *
-                 </label>
-                 <input
-                   type="date"
-                   name="joinedDate"
-                   value={formData.joinedDate}
-                   onChange={handleInputChange}
-                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
-                     errors.joinedDate ? 'border-red-500' : 'border-gray-300'
-                   }`}
-                 />
-                 {errors.joinedDate && (
-                   <p className="text-red-500 text-sm mt-1">{errors.joinedDate}</p>
-                 )}
-               </div>
+              {/* Joined Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Joined Date *
+                </label>
+                <input
+                  type="date"
+                  name="joinedDate"
+                  value={formData.joinedDate}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
+                    errors.joinedDate ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.joinedDate && (
+                  <p className="text-red-500 text-sm mt-1">{errors.joinedDate}</p>
+                )}
+              </div>
 
-               {/* Members */}
+               
+
+               {/* Breakfast Price */}
                <div>
                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                   Number of Members *
+                   Breakfast Price (AED) *
                  </label>
                  <input
                    type="number"
-                   name="members"
-                   value={formData.members}
+                   name="breakfastPrice"
+                   value={formData.breakfastPrice}
                    onChange={handleInputChange}
                    min="0"
-                   placeholder="Enter number of members"
+                   step="0.01"
+                   placeholder="25.50"
                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
-                     errors.members ? 'border-red-500' : 'border-gray-300'
+                     errors.breakfastPrice ? 'border-red-500' : 'border-gray-300'
                    }`}
                  />
-                 {errors.members && (
-                   <p className="text-red-500 text-sm mt-1">{errors.members}</p>
+                 {errors.breakfastPrice && (
+                   <p className="text-red-500 text-sm mt-1">{errors.breakfastPrice}</p>
+                 )}
+               </div>
+
+               {/* Lunch Price */}
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Lunch Price (AED) *
+                 </label>
+                 <input
+                   type="number"
+                   name="lunchPrice"
+                   value={formData.lunchPrice}
+                   onChange={handleInputChange}
+                   min="0"
+                   step="0.01"
+                   placeholder="35.00"
+                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
+                     errors.lunchPrice ? 'border-red-500' : 'border-gray-300'
+                   }`}
+                 />
+                 {errors.lunchPrice && (
+                   <p className="text-red-500 text-sm mt-1">{errors.lunchPrice}</p>
+                 )}
+               </div>
+
+               {/* Dinner Price */}
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Dinner Price (AED) *
+                 </label>
+                 <input
+                   type="number"
+                   name="dinnerPrice"
+                   value={formData.dinnerPrice}
+                   onChange={handleInputChange}
+                   min="0"
+                   step="0.01"
+                   placeholder="45.75"
+                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
+                     errors.dinnerPrice ? 'border-red-500' : 'border-gray-300'
+                   }`}
+                 />
+                 {errors.dinnerPrice && (
+                   <p className="text-red-500 text-sm mt-1">{errors.dinnerPrice}</p>
+                 )}
+               </div>
+
+               {/* Credit Limit */}
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Credit Limit (AED) *
+                 </label>
+                 <input
+                   type="number"
+                   name="creditLimit"
+                   value={formData.creditLimit}
+                   onChange={handleInputChange}
+                   min="0"
+                   step="0.01"
+                   placeholder="5000.00"
+                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
+                     errors.creditLimit ? 'border-red-500' : 'border-gray-300'
+                   }`}
+                 />
+                 {errors.creditLimit && (
+                   <p className="text-red-500 text-sm mt-1">{errors.creditLimit}</p>
+                 )}
+               </div>
+
+               {/* Credit Days */}
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Due Days *
+                 </label>
+                 <input
+                   type="number"
+                   name="creditDays"
+                   value={formData.creditDays}
+                   onChange={handleInputChange}
+                   min="0"
+                   placeholder="30"
+                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ${
+                     errors.creditDays ? 'border-red-500' : 'border-gray-300'
+                   }`}
+                 />
+                 {errors.creditDays && (
+                   <p className="text-red-500 text-sm mt-1">{errors.creditDays}</p>
                  )}
                </div>
             </div>
