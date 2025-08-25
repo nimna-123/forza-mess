@@ -7,7 +7,7 @@ const Summary = () => {
     activeCustomers: 1180,
     totalAgents: 25,
     activeAgents: 22,
-    totalCompanies: 'AED 2,45',
+    totalCompanies:  245,
     monthlyRevenue: 'AED 185,000',
     expiringSoon: 45,
     newThisMonth: 89
