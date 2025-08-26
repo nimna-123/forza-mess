@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import KitchenOrderPrint from '../components/KitchenOrderPrint';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -16,6 +17,12 @@ const Orders = () => {
       breakfast: 2,
       lunch: 1,
       dinner: 3,
+      breakfastVeg: 1,
+      breakfastNonVeg: 1,
+      lunchVeg: 1,
+      lunchNonVeg: 0,
+      dinnerVeg: 2,
+      dinnerNonVeg: 1,
       status: 'Delivered',
       orderDate: '2024-01-15',
       deliveryDate: '2024-01-15',
@@ -32,6 +39,7 @@ const Orders = () => {
       breakfast: 1,
       lunch: 2,
       dinner: 1,
+      // No veg/non-veg preferences specified
       status: 'In Progress',
       orderDate: '2024-01-15',
       deliveryDate: '2024-01-15',
@@ -48,6 +56,10 @@ const Orders = () => {
       breakfast: 0,
       lunch: 3,
       dinner: 2,
+      lunchVeg: 0,
+      lunchNonVeg: 3,
+      dinnerVeg: 1,
+      dinnerNonVeg: 1,
       status: 'Pending',
       orderDate: '2024-01-15',
       deliveryDate: '2024-01-15',
@@ -64,6 +76,12 @@ const Orders = () => {
       breakfast: 1,
       lunch: 1,
       dinner: 1,
+      breakfastVeg: 1,
+      breakfastNonVeg: 0,
+      lunchVeg: 0,
+      lunchNonVeg: 1,
+      dinnerVeg: 1,
+      dinnerNonVeg: 0,
       status: 'Delivered',
       orderDate: '2024-01-14',
       deliveryDate: '2024-01-14',
@@ -76,10 +94,14 @@ const Orders = () => {
       customerId: 'CUST005',
       customerName: 'David Wilson',
       customerMobile: '+971 54 567 8901',
-      customerType: 'Customer',
+      customerType: 'Company',
       breakfast: 2,
       lunch: 0,
       dinner: 2,
+      breakfastVeg: 0,
+      breakfastNonVeg: 2,
+      dinnerVeg: 1,
+      dinnerNonVeg: 1,
       status: 'Cancelled',
       orderDate: '2024-01-14',
       deliveryDate: '2024-01-14',
@@ -101,10 +123,17 @@ const Orders = () => {
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
+  const [isProcessingKitchenOrder, setIsProcessingKitchenOrder] = useState(false);
   const [editForm, setEditForm] = useState({
     breakfast: 0,
     lunch: 0,
-    dinner: 0
+    dinner: 0,
+    breakfastVeg: 0,
+    breakfastNonVeg: 0,
+    lunchVeg: 0,
+    lunchNonVeg: 0,
+    dinnerVeg: 0,
+    dinnerNonVeg: 0
   });
 
   const tableRef = useRef(null);
@@ -121,7 +150,7 @@ const Orders = () => {
 
 
 
-  const handleAddOrder = () => {
+    const handleAddOrder = () => {
     navigate('/add-order');
   };
 
@@ -132,7 +161,13 @@ const Orders = () => {
       setEditForm({
         breakfast: order.breakfast,
         lunch: order.lunch,
-        dinner: order.dinner
+        dinner: order.dinner,
+        breakfastVeg: order.breakfastVeg || 0,
+        breakfastNonVeg: order.breakfastNonVeg || 0,
+        lunchVeg: order.lunchVeg || 0,
+        lunchNonVeg: order.lunchNonVeg || 0,
+        dinnerVeg: order.dinnerVeg || 0,
+        dinnerNonVeg: order.dinnerNonVeg || 0
       });
       setIsEditModalOpen(true);
     }
@@ -150,14 +185,34 @@ const Orders = () => {
       console.log('Updated order:', editingOrder.orderId, editForm);
       setIsEditModalOpen(false);
       setEditingOrder(null);
-      setEditForm({ breakfast: 0, lunch: 0, dinner: 0 });
+      setEditForm({ 
+        breakfast: 0, 
+        lunch: 0, 
+        dinner: 0,
+        breakfastVeg: 0,
+        breakfastNonVeg: 0,
+        lunchVeg: 0,
+        lunchNonVeg: 0,
+        dinnerVeg: 0,
+        dinnerNonVeg: 0
+      });
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditModalOpen(false);
     setEditingOrder(null);
-    setEditForm({ breakfast: 0, lunch: 0, dinner: 0 });
+    setEditForm({ 
+      breakfast: 0, 
+      lunch: 0, 
+      dinner: 0,
+      breakfastVeg: 0,
+      breakfastNonVeg: 0,
+      lunchVeg: 0,
+      lunchNonVeg: 0,
+      dinnerVeg: 0,
+      dinnerNonVeg: 0
+    });
   };
 
   const handleDeleteOrder = (orderId) => {
@@ -236,30 +291,58 @@ const Orders = () => {
           )}
         </div>
 
-        {/* Add Order Button */}
-        <button
-          onClick={handleAddOrder}
-          className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm sm:text-base"
-        >
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <span>Add Order</span>
-        </button>
+        {/* Buttons Container - Right Aligned */}
+        <div className="flex items-center gap-0">
+          {/* Process Kitchen Order Button */}
+          <KitchenOrderPrint 
+            orders={orders} 
+            onProcessing={setIsProcessingKitchenOrder}
+          />
+
+          {/* Add Order Button */}
+          <button
+            onClick={handleAddOrder}
+            className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md 
+            hover:shadow-lg font-medium text-sm sm:text-base ml-4"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Add Order</span>
+          </button>
+        </div>
       </div>
 
       {/* Meal Summary and Filter Row */}
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         {/* Meal Summary - Left Side */}
         <div className="flex flex-wrap gap-4">
-          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
-            Breakfast: {orders.reduce((sum, order) => sum + order.breakfast, 0)}
+          <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
+            <div>Breakfast: {orders.reduce((sum, order) => sum + order.breakfast, 0)}</div>
+            <div className="flex items-center gap-2 mt-1 text-xs">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.breakfastVeg || 0), 0)}</span>
+              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.breakfastNonVeg || 0), 0)}</span>
+            </div>
           </div>
-          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
-            Lunch: {orders.reduce((sum, order) => sum + order.lunch, 0)}
+          <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
+            <div>Lunch: {orders.reduce((sum, order) => sum + order.lunch, 0)}</div>
+            <div className="flex items-center gap-2 mt-1 text-xs">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.lunchVeg || 0), 0)}</span>
+              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.lunchNonVeg || 0), 0)}</span>
+            </div>
           </div>
-          <div className="inline-flex items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
-            Dinner: {orders.reduce((sum, order) => sum + order.dinner, 0)}
+          <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
+            <div>Dinner: {orders.reduce((sum, order) => sum + order.dinner, 0)}</div>
+            <div className="flex items-center gap-2 mt-1 text-xs">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.dinnerVeg || 0), 0)}</span>
+              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.dinnerNonVeg || 0), 0)}</span>
+            </div>
           </div>
         </div>
 
@@ -403,8 +486,26 @@ const Orders = () => {
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.breakfast > 0 ? (
-                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm">
-                        {order.breakfast}
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center justify-center px-3 py-2 mb-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm">
+                          {order.breakfast}
+                        </div>
+                        {(order.breakfastVeg !== undefined || order.breakfastNonVeg !== undefined) && (
+                          <div className="text-xs space-y-1">
+                            {order.breakfastVeg > 0 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                {order.breakfastVeg}
+                              </div>
+                            )}
+                            {order.breakfastNonVeg > 0 && (
+                              <div className="inline-flex items-center px-2 ml-1 py-1 rounded bg-red-100 text-red-700 text-xs">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                {order.breakfastNonVeg}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
@@ -412,8 +513,26 @@ const Orders = () => {
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.lunch > 0 ? (
-                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
-                        {order.lunch}
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
+                          {order.lunch}
+                        </div>
+                        {(order.lunchVeg !== undefined || order.lunchNonVeg !== undefined) && (
+                          <div className="text-xs space-y-1">
+                            {order.lunchVeg > 0 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                {order.lunchVeg}
+                              </div>
+                            )}
+                            {order.lunchNonVeg > 0 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded bg-red-100 text-red-700 text-xs">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                {order.lunchNonVeg}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
@@ -421,8 +540,26 @@ const Orders = () => {
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.dinner > 0 ? (
-                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-sm">
-                        {order.dinner}
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-sm">
+                          {order.dinner}
+                        </div>
+                        {(order.dinnerVeg !== undefined || order.dinnerNonVeg !== undefined) && (
+                          <div className="text-xs space-y-1">
+                            {order.dinnerVeg > 0 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                {order.dinnerVeg}
+                              </div>
+                            )}
+                            {order.dinnerNonVeg > 0 && (
+                              <div className="inline-flex items-center px-2 py-1 rounded bg-red-100 text-red-700 text-xs">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                {order.dinnerNonVeg}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
@@ -432,8 +569,13 @@ const Orders = () => {
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={() => handleEditOrder(order.orderId)}
-                        className="text-blue-600 hover:text-blue-900 transition-colors duration-200 p-1 hover:bg-blue-50 rounded"
-                        title="Edit Order"
+                        disabled={isProcessingKitchenOrder}
+                        className={`transition-colors duration-200 p-1 rounded ${
+                          isProcessingKitchenOrder 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50'
+                        }`}
+                        title={isProcessingKitchenOrder ? "Edit disabled while processing kitchen order" : "Edit Order"}
                       >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -473,51 +615,146 @@ const Orders = () => {
                 </label>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-6">
+                {/* Breakfast Section */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
                     Breakfast
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editForm.breakfast}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, breakfast: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Total</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.breakfast}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, breakfast: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      />
+                    </div>
+                                                               <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.breakfastVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, breakfastVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.breakfastNonVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, breakfastNonVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                      </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/* Lunch Section */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                     Lunch
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editForm.lunch}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, lunch: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Total</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.lunch}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, lunch: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                                                               <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.lunchVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, lunchVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.lunchNonVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, lunchNonVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                      </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/* Dinner Section */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <span className="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
                     Dinner
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editForm.dinner}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, dinner: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  />
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Total</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.dinner}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, dinner: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                    </div>
+                                                               <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.dinnerVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, dinnerVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.dinnerNonVeg}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, dinnerNonVeg: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                      </div>
+                  </div>
                 </div>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-700 mb-2">Total Meals:</div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-gray-900 mb-2">
                   {editForm.breakfast + editForm.lunch + editForm.dinner}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    <span className="text-green-700 font-bold">
+                      {editForm.breakfastVeg + editForm.lunchVeg + editForm.dinnerVeg}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    <span className="text-red-700 font-bold">
+                      {editForm.breakfastNonVeg + editForm.lunchNonVeg + editForm.dinnerNonVeg}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -544,3 +781,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

@@ -14,6 +14,7 @@ const AddCustomer = () => {
     joinedDate: '',
     price: '',
     paymentMode: 'Card',
+    dietPreference: 'veg',
     meals: {
       breakfast: true,
       lunch: true,
@@ -111,6 +112,7 @@ const AddCustomer = () => {
           joinedDate: '',
           price: '',
           paymentMode: 'Card',
+          dietPreference: 'veg',
           meals: {
             breakfast: true,
             lunch: true,
@@ -408,6 +410,102 @@ const AddCustomer = () => {
                      {errors.meals}
                    </p>
                  )}
+               </div>
+
+               {/* Diet Preference */}
+               <div className="md:col-span-2">
+                 <label className="block text-sm font-medium text-gray-700 mb-4">
+                   Diet Preference *
+                 </label>
+                 <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     {/* Vegetarian */}
+                     <div 
+                       className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                         formData.dietPreference === 'veg' 
+                           ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-lg' 
+                           : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md'
+                       }`}
+                       onClick={() => setFormData(prevState => ({ ...prevState, dietPreference: 'veg' }))}
+                     >
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                           <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${
+                             formData.dietPreference === 'veg' 
+                               ? 'bg-gradient-to-r from-green-400 to-emerald-400 shadow-lg' 
+                               : 'bg-gray-100'
+                           }`}>
+                             <svg className={`w-8 h-8 ${formData.dietPreference === 'veg' ? 'text-white' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                               <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                             </svg>
+                           </div>
+                           <div>
+                             <h3 className={`font-semibold text-lg ${formData.dietPreference === 'veg' ? 'text-gray-800' : 'text-gray-600'}`}>
+                               Vegetarian
+                             </h3>
+                             <p className={`text-sm ${formData.dietPreference === 'veg' ? 'text-gray-600' : 'text-gray-500'}`}>
+                               Plant-based meals only
+                             </p>
+                           </div>
+                         </div>
+                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                           formData.dietPreference === 'veg' 
+                             ? 'bg-green-500 border-green-500' 
+                             : 'border-gray-300'
+                         }`}>
+                           {formData.dietPreference === 'veg' && (
+                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                             </svg>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* Non-Vegetarian */}
+                     <div 
+                       className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                         formData.dietPreference === 'non-veg' 
+                           ? 'bg-gradient-to-br from-red-50 to-pink-50 border-red-300 shadow-lg' 
+                           : 'bg-white border-gray-200 hover:border-red-300 hover:shadow-md'
+                       }`}
+                       onClick={() => setFormData(prevState => ({ ...prevState, dietPreference: 'non-veg' }))}
+                     >
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                           <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${
+                             formData.dietPreference === 'non-veg' 
+                               ? 'bg-gradient-to-r from-red-400 to-pink-400 shadow-lg' 
+                               : 'bg-gray-100'
+                           }`}>
+                             <svg className={`w-8 h-8 ${formData.dietPreference === 'non-veg' ? 'text-white' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                             </svg>
+                           </div>
+                           <div>
+                             <h3 className={`font-semibold text-lg ${formData.dietPreference === 'non-veg' ? 'text-gray-800' : 'text-gray-600'}`}>
+                               Non-Vegetarian
+                             </h3>
+                             <p className={`text-sm ${formData.dietPreference === 'non-veg' ? 'text-gray-600' : 'text-gray-500'}`}>
+                               Includes meat and fish
+                             </p>
+                           </div>
+                         </div>
+                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                           formData.dietPreference === 'non-veg' 
+                             ? 'bg-red-500 border-red-500' 
+                             : 'border-gray-300'
+                         }`}>
+                           {formData.dietPreference === 'non-veg' && (
+                             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                             </svg>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
                </div>
 
 
