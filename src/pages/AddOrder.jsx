@@ -163,7 +163,7 @@ const AddOrder = () => {
     
     // Reset form
     setSelectedCustomer(null);
-    setPreferenceType('preference');
+    setPreferenceType('none');
     setMealInputs({ 
       breakfast: { quantity: '', dietPreference: 'veg' }, 
       lunch: { quantity: '', dietPreference: 'veg' }, 

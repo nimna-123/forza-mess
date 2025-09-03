@@ -1,623 +1,371 @@
 import React from 'react';
 
 const KitchenOrderPrint = ({ orders, onProcessing }) => {
-  const generateDeliveryNote = (order, deliveryOrderNumber) => {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Catering Delivery Order - ${order.customerName}</title>
-        <style>
-          @page {
-            size: A4;
-            margin: 1cm;
-          }
-          body {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.3;
-            margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
-          }
-          .delivery-order {
-            border: 2px solid #000;
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          }
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #000;
-            padding: 20px;
-            background-color: #f8f9fa;
-          }
-          .header h1 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-          .order-info {
-            padding: 20px;
-            border-bottom: 1px solid #000;
-          }
-          .order-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-          }
-          .order-label {
-            font-weight: bold;
-            min-width: 180px;
-            flex-shrink: 0;
-          }
-          .order-value {
-            border-bottom: 1px solid #000;
-            flex: 1;
-            margin-left: 15px;
-            min-height: 25px;
-            padding: 2px 5px;
-          }
-          .client-info {
-            padding: 20px;
-            border-bottom: 1px solid #000;
-          }
-          .client-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-          }
-          .client-label {
-            font-weight: bold;
-            min-width: 180px;
-            flex-shrink: 0;
-          }
-          .client-value {
-            border-bottom: 1px solid #000;
-            flex: 1;
-            margin-left: 15px;
-            min-height: 25px;
-            padding: 2px 5px;
-          }
-          .order-details {
-            padding: 20px;
-            border-bottom: 1px solid #000;
-          }
-          .details-header {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            font-size: 14px;
-            letter-spacing: 1px;
-          }
-          .meal-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-          }
-          .meal-table th, .meal-table td {
-            border: 1px solid #000;
-            padding: 12px 8px;
-            text-align: center;
-            font-weight: 500;
-          }
-          .meal-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-          }
-          .meal-table td:first-child {
-            text-align: left;
-            font-weight: bold;
-          }
-          .signature-section {
-            padding: 20px;
-          }
-          .signature-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-          }
-          .signature-label {
-            font-weight: bold;
-            min-width: 250px;
-            flex-shrink: 0;
-          }
-          .signature-line {
-            border-bottom: 1px solid #000;
-            flex: 1;
-            margin-left: 15px;
-            min-height: 35px;
-          }
-          .notes {
-            padding: 20px;
-            border-top: 1px solid #000;
-            background-color: #f8f9fa;
-          }
-          .notes h4 {
-            margin: 0 0 12px 0;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-          }
-          .notes ul {
-            margin: 0;
-            padding-left: 20px;
-          }
-          .notes li {
-            margin-bottom: 6px;
-            line-height: 1.4;
-          }
-          @media print {
-            body { 
-              margin: 0; 
-              background-color: white;
-              padding: 0;
-            }
-            .no-print { display: none; }
-            .delivery-order {
-              box-shadow: none;
-              border: 2px solid #000;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="delivery-order">
-          <div class="header">
-            <h1>Catering Delivery Order</h1>
-          </div>
-          
-          <div class="order-info">
-            <div class="order-row">
-              <span class="order-label">Delivery Order No:</span>
-              <span class="order-value">${deliveryOrderNumber}</span>
-            </div>
-            <div class="order-row">
-              <span class="order-label">Date:</span>
-              <span class="order-value">${new Date().toLocaleDateString()}</span>
-            </div>
-            <div class="order-row">
-              <span class="order-label">Delivery Time:</span>
-              <span class="order-value">${new Date().toLocaleTimeString()}</span>
-            </div>
-          </div>
-          
-          <div class="client-info">
-            <div class="client-row">
-              <span class="client-label">Client / Company Name:</span>
-              <span class="client-value">${order.customerName}</span>
-            </div>
-            <div class="client-row">
-              <span class="client-label">Contact Person & Phone:</span>
-              <span class="client-value">${order.customerMobile || '__________________'}</span>
-            </div>
-            <div class="client-row">
-              <span class="client-label">Customer Type:</span>
-              <span class="client-value">${order.customerType}</span>
-            </div>
-          </div>
-          
-          <div class="order-details">
-            <div class="details-header">Order Details</div>
-            <table class="meal-table">
-              <thead>
-                <tr>
-                  <th>Meal Type</th>
-                  <th>Quantity</th>
-                  <th>Veg</th>
-                  <th>Non-Veg</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Breakfast</td>
-                  <td>${order.breakfast}</td>
-                  <td>${order.breakfastVeg || 0}</td>
-                  <td>${order.breakfastNonVeg || 0}</td>
-                </tr>
-                <tr>
-                  <td>Lunch</td>
-                  <td>${order.lunch}</td>
-                  <td>${order.lunchVeg || 0}</td>
-                  <td>${order.lunchNonVeg || 0}</td>
-                </tr>
-                <tr>
-                  <td>Dinner</td>
-                  <td>${order.dinner}</td>
-                  <td>${order.dinnerVeg || 0}</td>
-                  <td>${order.dinnerNonVeg || 0}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="signature-section">
-            <div class="signature-row">
-              <span class="signature-label">Delivered By (Signature & Name):</span>
-              <span class="signature-line"></span>
-            </div>
-            <div class="signature-row">
-              <span class="signature-label">Received By (Signature, Name & Company Stamp):</span>
-              <span class="signature-line"></span>
-            </div>
-          </div>
-          
-          <div class="notes">
-            <h4>Notes:</h4>
-            <ul>
-              <li>Please verify quantities upon delivery.</li>
-              <li>Any discrepancy should be reported immediately.</li>
-              <li>Customer: ${order.customerName}</li>
-              <li>Customer Type: ${order.customerType}</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            Print Delivery Order
-          </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-            Close
-          </button>
-        </div>
-      </body>
-      </html>
-    `;
-  };
-
   const handleDeliveryOrder = () => {
-    // Notify parent component that processing has started
-    if (onProcessing) {
-      onProcessing(true);
-    }
+    if (onProcessing) onProcessing(true);
 
-    // Filter orders for Company and Agent customers only (not individuals)
-    const deliveryOrders = orders.filter(order => 
+    // Filter orders for Company or Agent only
+    const deliveryOrders = orders.filter(order =>
       ['Company', 'Agent'].includes(order.customerType)
     );
 
     if (deliveryOrders.length === 0) {
       alert('No delivery orders found for Company or Agent customers.');
-      if (onProcessing) {
-        onProcessing(false);
-      }
+      if (onProcessing) onProcessing(false);
       return;
     }
 
-    // Generate all delivery notes content
+    // Generate all delivery notes with improved design
     const allDeliveryNotes = deliveryOrders.map((order, index) => {
-      const deliveryOrderNumber = `DEL${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}-${index + 1}`;
-      
+      const deliveryOrderNumber = `DEL${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}${String(Math.floor(Math.random()*1000)).padStart(3,'0')}-${index+1}`;
+
       return `
-        <div class="delivery-order" style="page-break-after: always;">
-          <div class="header">
-            <h1>Catering Delivery Order</h1>
-          </div>
-          
-          <div class="order-info">
-            <div class="order-row">
-              <span class="order-label">Delivery Order No:</span>
-              <span class="order-value">${deliveryOrderNumber}</span>
+        <div class="delivery-order" style="page-break-after: ${index === deliveryOrders.length - 1 ? 'auto' : 'always'}; min-height: 100vh;">
+          <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+              <h1>Catering Delivery Order</h1>
             </div>
-            <div class="order-row">
-              <span class="order-label">Date:</span>
-              <span class="order-value">${new Date().toLocaleDateString()}</span>
+            
+            <!-- Order Information Section -->
+            <div class="section">
+              <div class="section-title">Order Info</div>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="label">Delivery Order No</span>
+                  <span class="colon">:</span>
+                  <span class="value">${deliveryOrderNumber}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Date</span>
+                  <span class="colon">:</span>
+                  <span class="value">${order.orderDate || new Date().toLocaleDateString('en-GB')}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Delivery Time</span>
+                  <span class="colon">:</span>
+                  <span class="value">_________________</span>
+                </div>
+              </div>
             </div>
-            <div class="order-row">
-              <span class="order-label">Delivery Time:</span>
-              <span class="order-value">${new Date().toLocaleTimeString()}</span>
+            
+            <!-- Customer Information Section -->
+            <div class="section">
+              <div class="section-title">Customer Info</div>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="label">Client / Company Name</span>
+                  <span class="colon">:</span>
+                  <span class="value">${order.customerName}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Contact Number</span>
+                  <span class="colon">:</span>
+                  <span class="value">${order.customerMobile || '_________________'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Customer Type</span>
+                  <span class="colon">:</span>
+                  <span class="value">${order.customerType}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div class="client-info">
-            <div class="client-row">
-              <span class="client-label">Client / Company Name:</span>
-              <span class="client-value">${order.customerName}</span>
+            
+            <!-- Order Details Section -->
+            <div class="section">
+              <div class="section-title">Order Details</div>
+              <table class="order-table">
+                <thead>
+                  <tr>
+                    <th>Meal Type</th>
+                    <th>Quantity</th>
+                    <th>Veg</th>
+                    <th>Non Veg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Breakfast</td>
+                    <td>${order.breakfast || 0}</td>
+                    <td>${order.breakfastVeg || 0}</td>
+                    <td>${order.breakfastNonVeg || 0}</td>
+                  </tr>
+                  <tr>
+                    <td>Lunch</td>
+                    <td>${order.lunch || 0}</td>
+                    <td>${order.lunchVeg || 0}</td>
+                    <td>${order.lunchNonVeg || 0}</td>
+                  </tr>
+                  <tr>
+                    <td>Dinner</td>
+                    <td>${order.dinner || 0}</td>
+                    <td>${order.dinnerVeg || 0}</td>
+                    <td>${order.dinnerNonVeg || 0}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="client-row">
-              <span class="client-label">Contact Person & Phone:</span>
-              <span class="client-value">${order.customerMobile || '__________________'}</span>
+            
+            <!-- Signatures Section -->
+            <div class="signature-section">
+              <div class="signature-row">
+                <span class="signature-label">Delivered By (Signature & Name)</span>
+                <span class="colon">:</span>
+                <span class="signature-line"></span>
+              </div>
+              <div class="signature-row">
+                <span class="signature-label">Received By (Signature and Name, Company Name)</span>
+                <span class="colon">:</span>
+                <span class="signature-line"></span>
+              </div>
             </div>
-            <div class="client-row">
-              <span class="client-label">Customer Type:</span>
-              <span class="client-value">${order.customerType}</span>
+            
+            <!-- Notes Section -->
+            <div class="notes-section">
+              <div class="notes-title">Notes</div>
+              <ul class="notes-list">
+                <li>Please Verify Quantity Upon Delivery Time</li>
+                <li>Any discrepancy should be reported immediately</li>
+                <li>Customer Type: ${order.customerType}</li>
+                <li>Delivery Date: ${order.deliveryDate || order.orderDate || new Date().toLocaleDateString('en-GB')}</li>
+               
+              </ul>
             </div>
-          </div>
-          
-          <div class="order-details">
-            <div class="details-header">Order Details</div>
-            <table class="meal-table">
-              <thead>
-                <tr>
-                  <th>Meal Type</th>
-                  <th>Quantity</th>
-                  <th>Veg</th>
-                  <th>Non-Veg</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Breakfast</td>
-                  <td>${order.breakfast}</td>
-                  <td>${order.breakfastVeg || 0}</td>
-                  <td>${order.breakfastNonVeg || 0}</td>
-                </tr>
-                <tr>
-                  <td>Lunch</td>
-                  <td>${order.lunch}</td>
-                  <td>${order.lunchVeg || 0}</td>
-                  <td>${order.lunchNonVeg || 0}</td>
-                </tr>
-                <tr>
-                  <td>Dinner</td>
-                  <td>${order.dinner}</td>
-                  <td>${order.dinnerVeg || 0}</td>
-                  <td>${order.dinnerNonVeg || 0}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="signature-section">
-            <div class="signature-row">
-              <span class="signature-label">Delivered By (Signature & Name):</span>
-              <span class="signature-line"></span>
-            </div>
-            <div class="signature-row">
-              <span class="signature-label">Received By (Signature, Name & Company Stamp):</span>
-              <span class="signature-line"></span>
-            </div>
-          </div>
-          
-          <div class="notes">
-            <h4>Notes:</h4>
-            <ul>
-              <li>Please verify quantities upon delivery.</li>
-              <li>Any discrepancy should be reported immediately.</li>
-              <li>Customer: ${order.customerName}</li>
-              <li>Customer Type: ${order.customerType}</li>
-            </ul>
           </div>
         </div>
       `;
     }).join('');
 
-    // Create combined print content
+    // Complete HTML with improved CSS matching the reference image
     const printContent = `
-      <!DOCTYPE html>
-      <html>
+    <!DOCTYPE html>
+    <html>
       <head>
-        <title>Individual Delivery Orders</title>
+        <title>Delivery Orders</title>
         <style>
-          @page {
-            size: A4;
-            margin: 1cm;
+          @page { 
+            size: A4; 
+            margin: 15mm; 
           }
-          body {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.3;
+          
+          * {
             margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 0;
+            box-sizing: border-box;
           }
+          
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            line-height: 1.3; 
+            color: #000;
+            background-color: #f5f5f5;
+          }
+          
           .delivery-order {
-            border: 2px solid #000;
-            max-width: 800px;
-            margin: 0 auto 20px auto;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            page-break-inside: avoid;
+            background-color: #f5f5f5;
+            padding: 0;
+            margin: 0;
           }
+          
+          .main-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          
           .header {
             text-align: center;
-            border-bottom: 2px solid #000;
-            padding: 20px;
-            background-color: #f8f9fa;
+            margin-bottom: 25px;
+            background-color: #333;
+            color: white;
+            padding: 12px;
           }
+          
           .header h1 {
+            font-size: 18px;
+            font-weight: bold;
             margin: 0;
-            font-size: 20px;
-            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color:#000;
           }
-          .order-info {
-            padding: 20px;
-            border-bottom: 1px solid #000;
+          
+          .section {
+            margin-bottom: 20px;
+            background-color: transparent;
           }
-          .order-row {
+          
+          .section-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 12px;
+            color: #000;
+            
+            padding-bottom: 3px;
+          }
+          
+          .info-grid {
+            display: block;
+          }
+          
+          .info-row {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+            min-height: 18px;
           }
-          .order-label {
-            font-weight: bold;
-            min-width: 180px;
-            flex-shrink: 0;
-          }
-          .order-value {
-            border-bottom: 1px solid #000;
-            flex: 1;
-            margin-left: 15px;
-            min-height: 25px;
-            padding: 2px 5px;
-          }
-          .client-info {
-            padding: 20px;
-            border-bottom: 1px solid #000;
-          }
-          .client-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-          }
-          .client-label {
-            font-weight: bold;
-            min-width: 180px;
-            flex-shrink: 0;
-          }
-          .client-value {
-            border-bottom: 1px solid #000;
-            flex: 1;
-            margin-left: 15px;
-            min-height: 25px;
-            padding: 2px 5px;
-          }
-          .order-details {
-            padding: 20px;
-            border-bottom: 1px solid #000;
-          }
-          .details-header {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            font-size: 14px;
-            letter-spacing: 1px;
-          }
-          .meal-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-          }
-          .meal-table th, .meal-table td {
-            border: 1px solid #000;
-            padding: 12px 8px;
-            text-align: center;
+          
+          .label {
             font-weight: 500;
+            width: 160px;
+            flex-shrink: 0;
+            font-size: 12px;
+            font-color: #787878 !important;
           }
-          .meal-table th {
-            background-color: #f8f9fa;
+          
+          .colon {
+            margin: 0 8px;
+            font-weight: normal;
+          }
+          
+          .value {
+            flex: 1;
+            font-weight: normal;
+            border-bottom: 1px dashed #ACACAC;
+            min-height: 16px;
+            padding-bottom: 1px;
+          }
+          
+          .order-table {
+            width: 100%;
+            border: 1px solid #000;
+            margin: 10px 0;
+            background-color: white;
+            border-collapse: collapse;
+          }
+          
+          .order-table th {
+            background-color: #333;
+            color: white;
+            padding: 8px 6px;
+            text-align: center;
             font-weight: bold;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
+            font-size: 12px;
+            border: 1px solid #333;
           }
-          .meal-table td:first-child {
+          
+          .order-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid #333;
+            background-color: white;
+            font-size: 12px;
+          }
+          
+          .order-table td:first-child {
             text-align: left;
-            font-weight: bold;
+            font-weight: normal;
           }
+          
           .signature-section {
-            padding: 20px;
+            margin: 25px 0;
           }
+          
           .signature-row {
             display: flex;
             align-items: center;
             margin-bottom: 15px;
           }
+          
           .signature-label {
-            font-weight: bold;
-            min-width: 250px;
+            width: 280px;
             flex-shrink: 0;
+            font-size: 12px;
+            font-weight: normal;
           }
+          
           .signature-line {
-            border-bottom: 1px solid #000;
             flex: 1;
-            margin-left: 15px;
-            min-height: 35px;
+            border-bottom: 1px dashed  #ACACAC;
+            height: 16px;
+            margin-left: 8px;
           }
-          .notes {
-            padding: 20px;
-            border-top: 1px solid #000;
-            background-color: #f8f9fa;
+          
+          .notes-section {
+            margin-top: 25px;
           }
-          .notes h4 {
-            margin: 0 0 12px 0;
+          
+          .notes-title {
             font-weight: bold;
-            text-transform: uppercase;
             font-size: 13px;
-            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            color:  #787878;
+          
+            padding-bottom: 3px;
           }
-          .notes ul {
+          
+          .notes-list {
+            list-style: none;
+            padding: 0;
             margin: 0;
-            padding-left: 20px;
           }
-          .notes li {
-            margin-bottom: 6px;
-            line-height: 1.4;
+          
+          .notes-list li {
+            margin-bottom: 4px;
+            font-size: 12px;
+            line-height: 1.3;
+            position: relative;
+            padding-left: 12px;
+            color: #787878;
           }
-          .summary-info {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #e8f4fd;
-            border: 1px solid #007bff;
-            border-radius: 5px;
-          }
-          .summary-info h2 {
-            margin: 0 0 10px 0;
-            color: #007bff;
-            font-size: 16px;
-          }
-          .summary-info p {
-            margin: 5px 0;
+          
+          .notes-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
             font-weight: bold;
           }
+          
           @media print {
             body { 
-              margin: 0; 
               background-color: white;
+              margin: 0;
               padding: 0;
             }
-            .no-print { display: none; }
+            
             .delivery-order {
-              box-shadow: none;
-              border: 2px solid #000;
-              margin-bottom: 0;
-            }
-            .summary-info {
               background-color: white;
-              border: 1px solid #000;
+            }
+            
+            .no-print { 
+              display: none; 
             }
           }
         </style>
       </head>
       <body>
-        <div class="summary-info">
-          <h2>Individual Delivery Orders Summary</h2>
-          <p>Total Orders: ${deliveryOrders.length}</p>
-          <p>Date: ${new Date().toLocaleDateString()}</p>
-          <p>Time: ${new Date().toLocaleTimeString()}</p>
-        </div>
-        
         ${allDeliveryNotes}
         
-        <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            Print All Delivery Orders
+        <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <button onclick="window.print()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px; font-size: 12px;">
+            Print
           </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
             Close
           </button>
         </div>
       </body>
-      </html>
+    </html>
     `;
 
-    // Open single window with all delivery notes
+    // Open print window
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
-    // Auto-print after content loads
-    printWindow.onload = function() {
-      printWindow.print();
-    };
+    printWindow.onload = () => printWindow.print();
 
-    // Notify parent component that processing has completed
-    if (onProcessing) {
-      onProcessing(false);
-    }
+    if (onProcessing) onProcessing(false);
   };
 
   const handleProcessKitchenOrder = () => {
@@ -656,7 +404,12 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
     const totalDinnerVeg = kitchenOrders.reduce((sum, order) => sum + (order.dinnerVeg || 0), 0);
     const totalDinnerNonVeg = kitchenOrders.reduce((sum, order) => sum + (order.dinnerNonVeg || 0), 0);
 
-    // Create simplified print window content
+    // Calculate totals
+    const totalBreakfast = individualBreakfast + companyBreakfast + agentBreakfast;
+    const totalLunch = individualLunch + companyLunch + agentLunch;
+    const totalDinner = individualDinner + companyDinner + agentDinner;
+
+    // Create print window content matching the reference image
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -665,194 +418,245 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
         <style>
           @page {
             size: A5;
-            margin: 1cm;
+            margin: 0.8cm;
           }
           body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.4;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
           }
-          .header {
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+          }
+          .title-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px 20px;
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           }
-          .header h1 {
+          .title-box h1 {
             margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+          }
+          .date-time {
+            text-align: right;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+          }
+          .order-details-heading {
+            text-align: center;
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
           }
-          .header p {
-            margin: 5px 0 0 0;
-            font-size: 12px;
-            color: #666;
-          }
-          .summary-table {
+          .order-table {
             width: 100%;
+            border: 2px solid #000;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
             border-collapse: collapse;
-            margin-top: 20px;
+            outline: 1px solid #000;
+            outline-offset: 1px;
           }
-          .summary-table th, .summary-table td {
-            border: 1px solid #333;
-            padding: 8px 12px;
+          .order-table th {
+            background-color: #4a5568 !important;
+            color: white !important;
+            padding: 12px 8px;
             text-align: center;
-            font-size: 11px;
-          }
-          .summary-table th {
-            background-color: #f0f0f0;
             font-weight: bold;
+            font-size: 14px;
+            border: 1px solid #000;
+          }
+          .order-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #000;
+            background-color: white;
+          }
+          .order-table tr:last-child td {
+            border: 1px solid #000;
+            font-weight: bold;
+            background-color: #f8f9fa;
           }
           .customer-type {
             text-align: left;
             font-weight: bold;
-            background-color: #e8f4fd;
-          }
-          .meal-count {
-            font-weight: bold;
-            font-size: 14px;
-          }
-          .total-row {
-            background-color: #f8f8f8;
-            font-weight: bold;
           }
           .summary-cards {
-            margin-top: 20px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
+            margin-top: 20px;
           }
           .summary-card {
-            border: 2px solid #333;
-            border-radius: 8px;
+            background-color: white;
+            border: 1px dotted #e2e8f0;
+            border-radius: 6px;
             padding: 12px;
             text-align: center;
-            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           }
           .summary-card h3 {
-            margin: 0 0 8px 0;
+            margin: 0 0 10px 0;
             font-size: 14px;
             font-weight: bold;
             color: #333;
           }
           .total-count {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
-            color: #000;
-            margin-bottom: 8px;
+            color: #333;
+            margin-bottom: 10px;
           }
           .veg-nonveg {
             display: flex;
             justify-content: space-around;
-            font-size: 11px;
+            align-items: center;
           }
-          .veg-count {
-            color: #2d5a2d;
+          .veg-count, .nonveg-count {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
             font-weight: bold;
+            padding: 3px 6px;
+            border: 1px dotted #e2e8f0;
+            border-radius: 3px;
+            background-color: #f8f9fa;
           }
-          .nonveg-count {
-            color: #8b0000;
-            font-weight: bold;
-          }
-          .veg-indicator {
-            display: inline-block;
+          .veg-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            margin-right: 4px;
+            margin-right: 5px;
           }
-          .veg-indicator.veg {
-            background-color: #4ade80;
-          }
-          .veg-indicator.nonveg {
+          .veg-dot.red {
             background-color: #ef4444;
           }
+          .veg-dot.green {
+            background-color: #10b981;
+          }
           @media print {
-            body { margin: 0; }
+            body { 
+              margin: 0; 
+              background-color: white;
+              padding: 10px;
+            }
             .no-print { display: none; }
+            .container {
+              background-color: white;
+            }
+            .title-box, .summary-card {
+              box-shadow: none;
+              border: 1px solid #ccc;
+            }
+            .order-table {
+              box-shadow: none;
+              border: 1px solid #000;
+            }
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>Kitchen Order Summary</h1>
-          <p>Date: ${new Date().toLocaleDateString()}</p>
-          <p>Time: ${new Date().toLocaleTimeString()}</p>
-        </div>
-        
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>Customer Type</th>
-              <th>Total Breakfast</th>
-              <th>Total Lunch</th>
-              <th>Total Dinner</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="customer-type">Individual</td>
-              <td class="meal-count">${individualBreakfast}</td>
-              <td class="meal-count">${individualLunch}</td>
-              <td class="meal-count">${individualDinner}</td>
-            </tr>
-            <tr>
-              <td class="customer-type">Company</td>
-              <td class="meal-count">${companyBreakfast}</td>
-              <td class="meal-count">${companyLunch}</td>
-              <td class="meal-count">${companyDinner}</td>
-            </tr>
-            <tr>
-              <td class="customer-type">Agent</td>
-              <td class="meal-count">${agentBreakfast}</td>
-              <td class="meal-count">${agentLunch}</td>
-              <td class="meal-count">${agentDinner}</td>
-            </tr>
-            <tr class="total-row">
-              <td><strong>TOTAL</strong></td>
-              <td class="meal-count">${individualBreakfast + companyBreakfast + agentBreakfast}</td>
-              <td class="meal-count">${individualLunch + companyLunch + agentLunch}</td>
-              <td class="meal-count">${individualDinner + companyDinner + agentDinner}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div class="summary-cards">
-          <div class="summary-card">
-            <h3>Total Breakfast</h3>
-            <div class="total-count">${individualBreakfast + companyBreakfast + agentBreakfast}</div>
-            <div class="veg-nonveg">
-              <div class="veg-count">
-                <span class="veg-indicator veg"></span>${totalBreakfastVeg}
-              </div>
-              <div class="nonveg-count">
-                <span class="veg-indicator nonveg"></span>${totalBreakfastNonVeg}
+        <div class="container">
+          <div class="title-box">
+            <h1>Kitchen Order Summary</h1>
+          </div>
+          
+          <div class="date-time">
+            <span>${new Date().toLocaleDateString('en-GB')}</span>
+            <span>${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+          </div>
+          
+          <div class="order-details-heading">Order Details</div>
+          
+          <table class="order-table">
+            <thead>
+              <tr>
+                <th>Customer Type</th>
+                <th>Total Breakfast</th>
+                <th>Total Lunch</th>
+                <th>Total Dinner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="customer-type">Individual</td>
+                <td>${individualBreakfast}</td>
+                <td>${individualLunch}</td>
+                <td>${individualDinner}</td>
+              </tr>
+              <tr>
+                <td class="customer-type">Company</td>
+                <td>${companyBreakfast}</td>
+                <td>${companyLunch}</td>
+                <td>${companyDinner}</td>
+              </tr>
+              <tr>
+                <td class="customer-type">Agent</td>
+                <td>${agentBreakfast}</td>
+                <td>${agentLunch}</td>
+                <td>${agentDinner}</td>
+              </tr>
+              <tr>
+                <td class="customer-type"><strong>Total</strong></td>
+                <td><strong>${totalBreakfast}</strong></td>
+                <td><strong>${totalLunch}</strong></td>
+                <td><strong>${totalDinner}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="summary-cards">
+            <div class="summary-card">
+              <h3>Total Breakfast</h3>
+              <div class="total-count">${totalBreakfast}</div>
+              <div class="veg-nonveg">
+                <div class="nonveg-count">
+                  <span class="veg-dot red"></span>Non Veg ${totalBreakfastNonVeg}
+                </div>
+                <div class="veg-count">
+                  <span class="veg-dot green"></span>Veg ${totalBreakfastVeg}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="summary-card">
-            <h3>Total Lunch</h3>
-            <div class="total-count">${individualLunch + companyLunch + agentLunch}</div>
-            <div class="veg-nonveg">
-              <div class="veg-count">
-                <span class="veg-indicator veg"></span>${totalLunchVeg}
-              </div>
-              <div class="nonveg-count">
-                <span class="veg-indicator nonveg"></span>${totalLunchNonVeg}
+            <div class="summary-card">
+              <h3>Total Lunch</h3>
+              <div class="total-count">${totalLunch}</div>
+              <div class="veg-nonveg">
+                <div class="nonveg-count">
+                  <span class="veg-dot red"></span>Non Veg ${totalLunchNonVeg}
+                </div>
+                <div class="veg-count">
+                  <span class="veg-dot green"></span>Veg ${totalLunchVeg}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="summary-card">
-            <h3>Total Dinner</h3>
-            <div class="total-count">${individualDinner + companyDinner + agentDinner}</div>
-            <div class="veg-nonveg">
-              <div class="veg-count">
-                <span class="veg-indicator veg"></span>${totalDinnerVeg}
-              </div>
-              <div class="nonveg-count">
-                <span class="veg-indicator nonveg"></span>${totalDinnerNonVeg}
+            <div class="summary-card">
+              <h3>Total Dinner</h3>
+              <div class="total-count">${totalDinner}</div>
+              <div class="veg-nonveg">
+                <div class="nonveg-count">
+                  <span class="veg-dot red"></span>Non Veg ${totalDinnerNonVeg}
+                </div>
+                <div class="veg-count">
+                  <span class="veg-dot green"></span>Veg ${totalDinnerVeg}
+                </div>
               </div>
             </div>
           </div>
@@ -871,7 +675,7 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
     `;
 
     // Open new window and print
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(printContent);
     printWindow.document.close();
     
@@ -879,6 +683,11 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
     printWindow.onload = function() {
       printWindow.print();
     };
+
+    // Notify parent component that processing has completed
+    if (onProcessing) {
+      onProcessing(false);
+    }
   };
 
   return (

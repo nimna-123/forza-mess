@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import LoginScreen from './components/LoginScreen';
 import MainLayout from './components/MainLayout';
 import Summary from './pages/Summary';
@@ -12,6 +12,17 @@ import AddCompany from './pages/AddCompany';
 import AddOrder from './pages/AddOrder';
 import Orders from './pages/Orders';
 import './App.css';
+
+// Custom hook to scroll to top on route changes
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const App = () => {
   // Initialize authentication state from localStorage
@@ -52,6 +63,7 @@ const App = () => {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="App">
         <Routes>
           <Route 

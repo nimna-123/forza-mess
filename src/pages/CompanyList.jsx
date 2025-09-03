@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Switch from '../components/Switch';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
+import EditCompanyModal from '../components/EditCompanyModal';
 
 const CompanyList = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CompanyList = () => {
       creditLimit: 'AED 50,000',
       creditDays: 30,
       status: 'Active',
-      employeesCount: 45
+     
     },
     {
       id: 2,
@@ -41,7 +42,7 @@ const CompanyList = () => {
       creditLimit: 'AED 75,000',
       creditDays: 45,
       status: 'Active',
-      employeesCount: 52
+      
     },
     {
       id: 3,
@@ -59,7 +60,7 @@ const CompanyList = () => {
       creditLimit: 'AED 25,000',
       creditDays: 15,
       status: 'Inactive',
-      employeesCount: 28
+      
     },
     {
       id: 4,
@@ -77,7 +78,7 @@ const CompanyList = () => {
       creditLimit: 'AED 60,000',
       creditDays: 30,
       status: 'Active',
-      employeesCount: 38
+      
     },
     {
       id: 5,
@@ -95,7 +96,7 @@ const CompanyList = () => {
       creditLimit: 'AED 35,000',
       creditDays: 20,
       status: 'Active',
-      employeesCount: 31
+      
     }
   ]);
 
@@ -118,13 +119,31 @@ const CompanyList = () => {
     'CMP005': true
   });
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const tableRef = useRef(null);
   const resizingRef = useRef(null);
 
-  const handleEdit = (companyId) => {
-    console.log('Edit company:', companyId);
-    // Add edit functionality here
+  const handleEdit = (company) => {
+    setSelectedCompany(company);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveCompany = async (updatedCompany) => {
+    // In a real app, this would be an API call
+    console.log('Updated company data:', updatedCompany);
+    
+    // Update the companies array with the new data
+    const updatedCompanies = companies.map(company => 
+      company.id === updatedCompany.id ? updatedCompany : company
+    );
+    
+    // For demo purposes, we'll just log the update
+    // In a real app, you would update your state or make an API call
+    console.log('Company updated successfully:', updatedCompany.name);
+    
+    // You could also show a success message here
+    alert(`Company "${updatedCompany.name}" updated successfully!`);
   };
 
   const handleAddCompany = () => {
@@ -322,7 +341,18 @@ const CompanyList = () => {
                     {company.mobile}
                   </td>
                                      <td className="p-3 sm:p-4 align-middle">
-                     <div className="flex justify-center items-center w-full h-full" onClick={(e) => e.stopPropagation()}>
+                     <div className="flex justify-center items-center gap-2 w-full h-full" onClick={(e) => e.stopPropagation()}>
+                       {/* Edit Button */}
+                       <button
+                         onClick={() => handleEdit(company)}
+                         className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                         title="Edit Company"
+                       >
+                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                         </svg>
+                       </button>
+                       
                        {/* Status Switch */}
                        <Switch
                          checked={companyStatuses[company.companyId]}
@@ -343,6 +373,14 @@ const CompanyList = () => {
          isOpen={isDetailsModalOpen}
          onClose={() => setIsDetailsModalOpen(false)}
          company={selectedCompany}
+       />
+
+       {/* Edit Company Modal */}
+       <EditCompanyModal
+         isOpen={isEditModalOpen}
+         onClose={() => setIsEditModalOpen(false)}
+         company={selectedCompany}
+         onSave={handleSaveCompany}
        />
      </div>
    );

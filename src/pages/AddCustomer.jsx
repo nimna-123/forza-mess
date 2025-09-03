@@ -62,8 +62,6 @@ const AddCustomer = () => {
 
     if (!formData.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required';
-    } else if (!/^\+971\s\d{2}\s\d{3}\s\d{4}$/.test(formData.mobile)) {
-      newErrors.mobile = 'Mobile must be in format +971 XX XXX XXXX';
     }
 
     if (!formData.address.trim()) {

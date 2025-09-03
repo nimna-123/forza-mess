@@ -51,3 +51,19 @@ body {
 }
 
 /* Remove default styles that conflict with Tailwind */
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* For Firefox */
+input[type="number"]::-moz-number-spin-box {
+  display: none;
+}
