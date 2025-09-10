@@ -1,39 +1,100 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
-
+import { POST_ORDERS, GET_CUSTOMERS } from '../Api/service';
+import Toast from '../components/Toast';
 const AddOrder = () => {
   const navigate = useNavigate();
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
   
-  // Sample customer data - in a real app, this would come from an API
-  const [customers] = useState([
-    { id: 1, customerId: 'CUST001', name: 'John Smith', mobile: '+971 50 123 4567' },
-    { id: 2, customerId: 'CUST002', name: 'Sarah Johnson', mobile: '+971 55 234 5678' },
-    { id: 3, customerId: 'CUST003', name: 'Michael Brown', mobile: '+971 52 345 6789' },
-    { id: 4, customerId: 'CUST004', name: 'Emily Davis', mobile: '+971 56 456 7890' },
-    { id: 5, customerId: 'CUST005', name: 'David Wilson', mobile: '+971 54 567 8901' }
-  ]);
+  // Customer data from API
+  const [customers, setCustomers] = useState([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [preferenceType, setPreferenceType] = useState('none');
   const [mealInputs, setMealInputs] = useState({
-    breakfast: { quantity: '', dietPreference: 'veg' },
-    lunch: { quantity: '', dietPreference: 'veg' },
-    dinner: { quantity: '', dietPreference: 'veg' }
+    breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' },
+    lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' },
+    dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }
   });
   
   const [orders, setOrders] = useState([]);
   const [editingOrder, setEditingOrder] = useState(null);
   const [editForm, setEditForm] = useState({
-    breakfast: { quantity: '', dietPreference: 'veg' },
-    lunch: { quantity: '', dietPreference: 'veg' },
-    dinner: { quantity: '', dietPreference: 'veg' }
+    breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' },
+    lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' },
+    dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }
   });
 
-  // Transform customers data for react-select
+  // Load customers on component mount
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        setLoadingCustomers(true);
+        let agentCustomers = [];
+        let companyCustomers = [];
+        
+        try {
+          const agentResponse = await GET_CUSTOMERS('agent');
+          agentCustomers = Array.isArray(agentResponse) ? agentResponse : (agentResponse?.data || []);
+          
+        } catch (agentError) {
+          console.error('Error fetching agent customers:', agentError);
+          showToast('Warning: Could not load agent customers', 'error');
+        }
+        try {
+          const companyResponse = await GET_CUSTOMERS('company');
+          companyCustomers = Array.isArray(companyResponse) ? companyResponse : (companyResponse?.data || []);
+        
+        } catch (companyError) {
+          console.error('Error fetching company customers:', companyError);
+         
+        }
+        
+        // Combine both arrays
+        const allCustomers = [...agentCustomers, ...companyCustomers];
+        console.log('Total customers loaded:', allCustomers.length);
+        if (allCustomers.length === 0) {
+          showToast('No customers found. Please check if customers exist in the system.', 'error');
+        } else {
+          setCustomers(allCustomers);
+          showToast(`Loaded ${allCustomers.length} customers successfully`, 'success');
+        }
+      } catch (error) {
+        console.error('Unexpected error loading customers:', error);
+        showToast(`Failed to load customers: ${error.message || 'Unknown error'}`, 'error');
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+
+    loadCustomers();
+  }, []);
+
+
   const customerOptions = customers.map(customer => ({
-    value: customer.customerId,
-    label: customer.name,
+    value: customer.customerId || customer.id,
+    label: customer.name || customer.customerName,
     customer: customer
   }));
 
@@ -99,26 +160,34 @@ const AddOrder = () => {
 
   const handleMealInputChange = (e) => {
     const { name, value } = e.target;
+    const fieldName = name.split('.')[0]; // e.g., 'breakfast' from 'breakfast.veg'
+    const quantityType = name.split('.')[1]; // e.g., 'veg' from 'breakfast.veg'
+    
     // Only allow positive numbers
     const numericValue = value.replace(/[^0-9]/g, '');
-    setMealInputs(prev => ({
-      ...prev,
-      [name]: {
-        ...prev[name],
-        quantity: numericValue
-      }
-    }));
+    
+    if (preferenceType === 'none') {
+      // When preference type is none, set both veg and nonVeg to 0, and set the value to total quantity
+      setMealInputs(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          vegQuantity: '0',
+          nonVegQuantity: '0',
+          [quantityType]: numericValue
+        }
+      }));
+    } else {
+      setMealInputs(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          [quantityType]: numericValue
+        }
+      }));
+    }
   };
 
-  const handleDietPreferenceChange = (mealType, preference) => {
-    setMealInputs(prev => ({
-      ...prev,
-      [mealType]: {
-        ...prev[mealType],
-        dietPreference: preference
-      }
-    }));
-  };
 
   const handleAddOrder = () => {
     if (!selectedCustomer) {
@@ -126,9 +195,9 @@ const AddOrder = () => {
       return;
     }
 
-    const totalMeals = parseInt(mealInputs.breakfast.quantity || 0) + 
-                      parseInt(mealInputs.lunch.quantity || 0) + 
-                      parseInt(mealInputs.dinner.quantity || 0);
+    const totalMeals = (parseInt(mealInputs.breakfast.vegQuantity || 0) + parseInt(mealInputs.breakfast.nonVegQuantity || 0)) + 
+                      (parseInt(mealInputs.lunch.vegQuantity || 0) + parseInt(mealInputs.lunch.nonVegQuantity || 0)) + 
+                      (parseInt(mealInputs.dinner.vegQuantity || 0) + parseInt(mealInputs.dinner.nonVegQuantity || 0));
 
     if (totalMeals === 0) {
       alert('Please enter at least one meal quantity');
@@ -144,15 +213,21 @@ const AddOrder = () => {
       customerMobile: customer.mobile,
       preferenceType: preferenceType,
       breakfast: {
-        quantity: parseInt(mealInputs.breakfast.quantity || 0),
+        vegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.breakfast.vegQuantity || 0),
+        nonVegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.breakfast.nonVegQuantity || 0),
+        totalQuantity: preferenceType === 'none' ? parseInt(mealInputs.breakfast.vegQuantity || 0) : parseInt(mealInputs.breakfast.vegQuantity || 0) + parseInt(mealInputs.breakfast.nonVegQuantity || 0),
         dietPreference: preferenceType === 'preference' ? mealInputs.breakfast.dietPreference : 'none'
       },
       lunch: {
-        quantity: parseInt(mealInputs.lunch.quantity || 0),
+        vegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.lunch.vegQuantity || 0),
+        nonVegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.lunch.nonVegQuantity || 0),
+        totalQuantity: preferenceType === 'none' ? parseInt(mealInputs.lunch.vegQuantity || 0) : parseInt(mealInputs.lunch.vegQuantity || 0) + parseInt(mealInputs.lunch.nonVegQuantity || 0),
         dietPreference: preferenceType === 'preference' ? mealInputs.lunch.dietPreference : 'none'
       },
       dinner: {
-        quantity: parseInt(mealInputs.dinner.quantity || 0),
+        vegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.dinner.vegQuantity || 0),
+        nonVegQuantity: preferenceType === 'none' ? 0 : parseInt(mealInputs.dinner.nonVegQuantity || 0),
+        totalQuantity: preferenceType === 'none' ? parseInt(mealInputs.dinner.vegQuantity || 0) : parseInt(mealInputs.dinner.vegQuantity || 0) + parseInt(mealInputs.dinner.nonVegQuantity || 0),
         dietPreference: preferenceType === 'preference' ? mealInputs.dinner.dietPreference : 'none'
       },
       total: totalMeals,
@@ -165,9 +240,9 @@ const AddOrder = () => {
     setSelectedCustomer(null);
     setPreferenceType('none');
     setMealInputs({ 
-      breakfast: { quantity: '', dietPreference: 'veg' }, 
-      lunch: { quantity: '', dietPreference: 'veg' }, 
-      dinner: { quantity: '', dietPreference: 'veg' } 
+      breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' } 
     });
   };
 
@@ -175,15 +250,18 @@ const AddOrder = () => {
     setEditingOrder(order);
     setEditForm({
       breakfast: { 
-        quantity: order.breakfast.quantity ? order.breakfast.quantity.toString() : '', 
+        vegQuantity: order.breakfast.vegQuantity ? order.breakfast.vegQuantity.toString() : '', 
+        nonVegQuantity: order.breakfast.nonVegQuantity ? order.breakfast.nonVegQuantity.toString() : '', 
         dietPreference: order.breakfast.dietPreference || 'veg' 
       },
       lunch: { 
-        quantity: order.lunch.quantity ? order.lunch.quantity.toString() : '', 
+        vegQuantity: order.lunch.vegQuantity ? order.lunch.vegQuantity.toString() : '', 
+        nonVegQuantity: order.lunch.nonVegQuantity ? order.lunch.nonVegQuantity.toString() : '', 
         dietPreference: order.lunch.dietPreference || 'veg' 
       },
       dinner: { 
-        quantity: order.dinner.quantity ? order.dinner.quantity.toString() : '', 
+        vegQuantity: order.dinner.vegQuantity ? order.dinner.vegQuantity.toString() : '', 
+        nonVegQuantity: order.dinner.nonVegQuantity ? order.dinner.nonVegQuantity.toString() : '', 
         dietPreference: order.dinner.dietPreference || 'veg' 
       }
     });
@@ -191,51 +269,64 @@ const AddOrder = () => {
 
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
+    const fieldName = name.split('.')[0]; // e.g., 'breakfast' from 'breakfast.veg'
+    const quantityType = name.split('.')[1]; // e.g., 'veg' from 'breakfast.veg'
+    
     // Only allow positive numbers
     const numericValue = value.replace(/[^0-9]/g, '');
-    setEditForm(prev => ({
-      ...prev,
-      [name]: {
-        ...prev[name],
-        quantity: numericValue
-      }
-    }));
+    
+    if (editingOrder?.preferenceType === 'none') {
+      // When preference type is none, set both veg and nonVeg to 0, and set the value to total quantity
+      setEditForm(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          vegQuantity: '0',
+          nonVegQuantity: '0',
+          [quantityType]: numericValue
+        }
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName],
+          [quantityType]: numericValue
+        }
+      }));
+    }
   };
 
-  const handleEditDietPreferenceChange = (mealType, preference) => {
-    setEditForm(prev => ({
-      ...prev,
-      [mealType]: {
-        ...prev[mealType],
-        dietPreference: preference
-      }
-    }));
-  };
 
   const handleSaveEdit = () => {
-    const totalMeals = parseInt(editForm.breakfast.quantity || 0) + 
-                      parseInt(editForm.lunch.quantity || 0) + 
-                      parseInt(editForm.dinner.quantity || 0);
+    const totalMeals = (parseInt(editForm.breakfast.vegQuantity || 0) + parseInt(editForm.breakfast.nonVegQuantity || 0)) + 
+                      (parseInt(editForm.lunch.vegQuantity || 0) + parseInt(editForm.lunch.nonVegQuantity || 0)) + 
+                      (parseInt(editForm.dinner.vegQuantity || 0) + parseInt(editForm.dinner.nonVegQuantity || 0));
 
     if (totalMeals === 0) {
       alert('Please enter at least one meal quantity');
       return;
     }
-
     setOrders(prev => prev.map(order => 
       order.id === editingOrder.id 
         ? {
             ...order,
             breakfast: {
-              quantity: parseInt(editForm.breakfast.quantity || 0),
+              vegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.breakfast.vegQuantity || 0),
+              nonVegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.breakfast.nonVegQuantity || 0),
+              totalQuantity: editingOrder.preferenceType === 'none' ? parseInt(editForm.breakfast.vegQuantity || 0) : parseInt(editForm.breakfast.vegQuantity || 0) + parseInt(editForm.breakfast.nonVegQuantity || 0),
               dietPreference: editForm.breakfast.dietPreference
             },
             lunch: {
-              quantity: parseInt(editForm.lunch.quantity || 0),
+              vegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.lunch.vegQuantity || 0),
+              nonVegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.lunch.nonVegQuantity || 0),
+              totalQuantity: editingOrder.preferenceType === 'none' ? parseInt(editForm.lunch.vegQuantity || 0) : parseInt(editForm.lunch.vegQuantity || 0) + parseInt(editForm.lunch.nonVegQuantity || 0),
               dietPreference: editForm.lunch.dietPreference
             },
             dinner: {
-              quantity: parseInt(editForm.dinner.quantity || 0),
+              vegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.dinner.vegQuantity || 0),
+              nonVegQuantity: editingOrder.preferenceType === 'none' ? 0 : parseInt(editForm.dinner.nonVegQuantity || 0),
+              totalQuantity: editingOrder.preferenceType === 'none' ? parseInt(editForm.dinner.vegQuantity || 0) : parseInt(editForm.dinner.vegQuantity || 0) + parseInt(editForm.dinner.nonVegQuantity || 0),
               dietPreference: editForm.dinner.dietPreference
             },
             total: totalMeals
@@ -245,18 +336,18 @@ const AddOrder = () => {
 
     setEditingOrder(null);
     setEditForm({ 
-      breakfast: { quantity: '', dietPreference: 'veg' }, 
-      lunch: { quantity: '', dietPreference: 'veg' }, 
-      dinner: { quantity: '', dietPreference: 'veg' } 
+      breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' } 
     });
   };
 
   const handleCancelEdit = () => {
     setEditingOrder(null);
     setEditForm({ 
-      breakfast: { quantity: '', dietPreference: 'veg' }, 
-      lunch: { quantity: '', dietPreference: 'veg' }, 
-      dinner: { quantity: '', dietPreference: 'veg' } 
+      breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+      dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' } 
     });
   };
 
@@ -264,15 +355,39 @@ const AddOrder = () => {
     navigate('/agent-list');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
+    const transformedOrders = orders.map(order => ({
+      ...order,
+      customerId: String(order.customerId),
+    }));
+ 
     if (orders.length === 0) {
       alert('Please add at least one order');
       return;
     }
-    
-    console.log('Orders to be submitted:', orders);
-    alert('Orders submitted successfully!');
-    navigate('/agent-list');
+    try {
+      const response = await POST_ORDERS(transformedOrders);
+      showToast("Add Order successfully!", "success");
+      setOrders([]);
+      setSelectedCustomer(null);
+      setPreferenceType('none');
+      setMealInputs({ 
+        breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+        lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+        dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' } 
+      });
+      setEditingOrder(null);
+      setEditForm({ 
+        breakfast: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+        lunch: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' }, 
+        dinner: { vegQuantity: '', nonVegQuantity: '', dietPreference: 'veg' } 
+      });
+      
+      // navigate('/orders');
+    } catch (error) {
+      console.error("Error adding company:", error);
+      showToast("Failed to add company", "error");
+    }
   };
 
   const removeOrder = (orderId) => {
@@ -282,10 +397,13 @@ const AddOrder = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
              <div className="max-w-6xl mx-auto">
-        {/* Header */}
-    
-
-         {/* Order Input Section */}
+              <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={hideToast}
+            />
+        {/* Order Input Section */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
             <h2 className="text-xl font-semibold text-gray-800">Add New Order</h2>
@@ -322,7 +440,7 @@ const AddOrder = () => {
               </div>
 
               {/* Single Row Input */}
-            <div className="flex flex-col lg:flex-row gap-4 items-end">
+            <div className="flex flex-row gap-4 items-end">
                              {/* Customer Selection */}
                <div className="flex-1 relative z-50">
                  <div className="flex items-center  mb-2">
@@ -340,9 +458,10 @@ const AddOrder = () => {
                    value={selectedCustomer}
                    onChange={handleCustomerChange}
                    options={customerOptions}
-                   placeholder="Select a customer..."
+                   placeholder={loadingCustomers ? "Loading customers..." : "Select a customer..."}
                    isClearable
                    isSearchable
+                   isLoading={loadingCustomers}
                    styles={customStyles}
                    components={{
                      Option: CustomOption
@@ -360,44 +479,41 @@ const AddOrder = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Breakfast
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="breakfast"
-                      value={mealInputs.breakfast.quantity}
-                      onChange={handleMealInputChange}
-                      placeholder="0"
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 text-center text-lg font-semibold ${
-                        preferenceType === 'preference' ? 'pr-20' : ''
-                      }`}
-                    />
-                    {preferenceType === 'preference' && (
-                      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('breakfast', 'veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.breakfast.dietPreference === 'veg'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          V
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('breakfast', 'non-veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.breakfast.dietPreference === 'non-veg'
-                              ? 'bg-red-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          NV
-                        </button>
+                  {preferenceType === 'preference' ? (
+                    <div className="flex gap-1">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="breakfast.vegQuantity"
+                          value={mealInputs.breakfast.vegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="V"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
                       </div>
-                    )}
-                  </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="breakfast.nonVegQuantity"
+                          value={mealInputs.breakfast.nonVegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="NV"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="breakfast.vegQuantity"
+                        value={mealInputs.breakfast.vegQuantity}
+                        onChange={handleMealInputChange}
+                        placeholder="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 text-center text-lg font-semibold"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Lunch */}
@@ -405,44 +521,41 @@ const AddOrder = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Lunch
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="lunch"
-                      value={mealInputs.lunch.quantity}
-                      onChange={handleMealInputChange}
-                      placeholder="0"
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-center text-lg font-semibold ${
-                        preferenceType === 'preference' ? 'pr-20' : ''
-                      }`}
-                    />
-                    {preferenceType === 'preference' && (
-                      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('lunch', 'veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.lunch.dietPreference === 'veg'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          V
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('lunch', 'non-veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.lunch.dietPreference === 'non-veg'
-                              ? 'bg-red-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          NV
-                        </button>
+                  {preferenceType === 'preference' ? (
+                    <div className="flex gap-1">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="lunch.vegQuantity"
+                          value={mealInputs.lunch.vegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="V"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
                       </div>
-                    )}
-                  </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="lunch.nonVegQuantity"
+                          value={mealInputs.lunch.nonVegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="NV"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="lunch.vegQuantity"
+                        value={mealInputs.lunch.vegQuantity}
+                        onChange={handleMealInputChange}
+                        placeholder="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-center text-lg font-semibold"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Dinner */}
@@ -450,44 +563,41 @@ const AddOrder = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Dinner
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="dinner"
-                      value={mealInputs.dinner.quantity}
-                      onChange={handleMealInputChange}
-                      placeholder="0"
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-center text-lg font-semibold ${
-                        preferenceType === 'preference' ? 'pr-20' : ''
-                      }`}
-                    />
-                    {preferenceType === 'preference' && (
-                      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('dinner', 'veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.dinner.dietPreference === 'veg'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          V
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDietPreferenceChange('dinner', 'non-veg')}
-                          className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                            mealInputs.dinner.dietPreference === 'non-veg'
-                              ? 'bg-red-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                          }`}
-                        >
-                          NV
-                        </button>
+                  {preferenceType === 'preference' ? (
+                    <div className="flex gap-1">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="dinner.vegQuantity"
+                          value={mealInputs.dinner.vegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="V"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
                       </div>
-                    )}
-                  </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          name="dinner.nonVegQuantity"
+                          value={mealInputs.dinner.nonVegQuantity}
+                          onChange={handleMealInputChange}
+                          placeholder="NV"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 text-center text-sm font-semibold"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="dinner.vegQuantity"
+                        value={mealInputs.dinner.vegQuantity}
+                        onChange={handleMealInputChange}
+                        placeholder="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-center text-lg font-semibold"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -568,52 +678,44 @@ const AddOrder = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {editingOrder?.id === order.id ? (
                           <div className="space-y-2">
-                            <input
-                              type="text"
-                              name="breakfast"
-                              value={editForm.breakfast.quantity}
-                              onChange={handleEditFormChange}
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                            />
                             <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('breakfast', 'veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.breakfast.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                V
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('breakfast', 'non-veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.breakfast.dietPreference === 'non-veg'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                NV
-                              </button>
+                              <input
+                                type="text"
+                                name="breakfast.vegQuantity"
+                                value={editForm.breakfast.vegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="V"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
+                              <input
+                                type="text"
+                                name="breakfast.nonVegQuantity"
+                                value={editForm.breakfast.nonVegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="NV"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
                             </div>
                           </div>
                         ) : (
-                          order.breakfast.quantity > 0 && (
+                          order.breakfast.totalQuantity > 0 && (
                             <div className="flex flex-col items-center gap-1">
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                                {order.breakfast.quantity}
+                                {order.breakfast.totalQuantity}
                               </span>
                               {order.preferenceType === 'preference' && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                  order.breakfast.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {order.breakfast.dietPreference === 'veg' ? 'Veg' : 'Non-Veg'}
-                                </span>
+                                <div className="flex gap-1">
+                                  {order.breakfast.vegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                      {order.breakfast.vegQuantity}V
+                                    </span>
+                                  )}
+                                  {order.breakfast.nonVegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                      {order.breakfast.nonVegQuantity}NV
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )
@@ -622,52 +724,44 @@ const AddOrder = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {editingOrder?.id === order.id ? (
                           <div className="space-y-2">
-                            <input
-                              type="text"
-                              name="lunch"
-                              value={editForm.lunch.quantity}
-                              onChange={handleEditFormChange}
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                            />
                             <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('lunch', 'veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.lunch.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                V
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('lunch', 'non-veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.lunch.dietPreference === 'non-veg'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                NV
-                              </button>
+                              <input
+                                type="text"
+                                name="lunch.vegQuantity"
+                                value={editForm.lunch.vegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="V"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
+                              <input
+                                type="text"
+                                name="lunch.nonVegQuantity"
+                                value={editForm.lunch.nonVegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="NV"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
                             </div>
                           </div>
                         ) : (
-                          order.lunch.quantity > 0 && (
+                          order.lunch.totalQuantity > 0 && (
                             <div className="flex flex-col items-center gap-1">
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                {order.lunch.quantity}
+                                {order.lunch.totalQuantity}
                               </span>
                               {order.preferenceType === 'preference' && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                  order.lunch.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {order.lunch.dietPreference === 'veg' ? 'Veg' : 'Non-Veg'}
-                                </span>
+                                <div className="flex gap-1">
+                                  {order.lunch.vegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                      {order.lunch.vegQuantity}V
+                                    </span>
+                                  )}
+                                  {order.lunch.nonVegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                      {order.lunch.nonVegQuantity}NV
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )
@@ -676,52 +770,44 @@ const AddOrder = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {editingOrder?.id === order.id ? (
                           <div className="space-y-2">
-                            <input
-                              type="text"
-                              name="dinner"
-                              value={editForm.dinner.quantity}
-                              onChange={handleEditFormChange}
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                            />
                             <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('dinner', 'veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.dinner.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                V
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditDietPreferenceChange('dinner', 'non-veg')}
-                                className={`px-2 py-1 text-xs rounded ${
-                                  editForm.dinner.dietPreference === 'non-veg'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                              >
-                                NV
-                              </button>
+                              <input
+                                type="text"
+                                name="dinner.vegQuantity"
+                                value={editForm.dinner.vegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="V"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
+                              <input
+                                type="text"
+                                name="dinner.nonVegQuantity"
+                                value={editForm.dinner.nonVegQuantity}
+                                onChange={handleEditFormChange}
+                                placeholder="NV"
+                                className="w-12 px-1 py-1 border border-gray-300 rounded text-center text-xs"
+                              />
                             </div>
                           </div>
                         ) : (
-                          order.dinner.quantity > 0 && (
+                          order.dinner.totalQuantity > 0 && (
                             <div className="flex flex-col items-center gap-1">
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                                {order.dinner.quantity}
+                                {order.dinner.totalQuantity}
                               </span>
                               {order.preferenceType === 'preference' && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                  order.dinner.dietPreference === 'veg'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {order.dinner.dietPreference === 'veg' ? 'Veg' : 'Non-Veg'}
-                                </span>
+                                <div className="flex gap-1">
+                                  {order.dinner.vegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                      {order.dinner.vegQuantity}V
+                                    </span>
+                                  )}
+                                  {order.dinner.nonVegQuantity > 0 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                      {order.dinner.nonVegQuantity}NV
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )
@@ -730,7 +816,9 @@ const AddOrder = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {editingOrder?.id === order.id ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
-                            {parseInt(editForm.breakfast.quantity || 0) + parseInt(editForm.lunch.quantity || 0) + parseInt(editForm.dinner.quantity || 0)}
+                            {(parseInt(editForm.breakfast.vegQuantity || 0) + parseInt(editForm.breakfast.nonVegQuantity || 0)) + 
+                             (parseInt(editForm.lunch.vegQuantity || 0) + parseInt(editForm.lunch.nonVegQuantity || 0)) + 
+                             (parseInt(editForm.dinner.vegQuantity || 0) + parseInt(editForm.dinner.nonVegQuantity || 0))}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">

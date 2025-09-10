@@ -1,114 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KitchenOrderPrint from '../components/KitchenOrderPrint';
+import { GET_ORDERS,UPDATE_ORDERS } from '../Api/service';
+import Toast from '../components/Toast';
 
 const Orders = () => {
   const navigate = useNavigate();
   
-  // Sample orders data - in a real app, this would come from an API
-  const [orders] = useState([
-    {
-      id: 1,
-      orderId: 'ORD001',
-      customerId: 'CUST001',
-      customerName: 'John Smith',
-      customerMobile: '+971 50 123 4567',
-      customerType: 'Individual',
-      breakfast: 2,
-      lunch: 1,
-      dinner: 3,
-      breakfastVeg: 1,
-      breakfastNonVeg: 1,
-      lunchVeg: 1,
-      lunchNonVeg: 0,
-      dinnerVeg: 2,
-      dinnerNonVeg: 1,
-      status: 'Delivered',
-      orderDate: '2024-01-15',
-      deliveryDate: '2024-01-15',
-      agentId: 'AGT001',
-      agentName: 'Ahmed Hassan'
-    },
-    {
-      id: 2,
-      orderId: 'ORD002',
-      customerId: 'CUST002',
-      customerName: 'Sarah Johnson',
-      customerMobile: '+971 55 234 5678',
-      customerType: 'Company',
-      breakfast: 1,
-      lunch: 2,
-      dinner: 1,
-      // No veg/non-veg preferences specified
-      status: 'In Progress',
-      orderDate: '2024-01-15',
-      deliveryDate: '2024-01-15',
-      agentId: 'AGT002',
-      agentName: 'Fatima Al Mansouri'
-    },
-    {
-      id: 3,
-      orderId: 'ORD003',
-      customerId: 'CUST003',
-      customerName: 'Michael Brown',
-      customerMobile: '+971 52 345 6789',
-      customerType: 'Agent',
-      breakfast: 0,
-      lunch: 3,
-      dinner: 2,
-      lunchVeg: 0,
-      lunchNonVeg: 3,
-      dinnerVeg: 1,
-      dinnerNonVeg: 1,
-      status: 'Pending',
-      orderDate: '2024-01-15',
-      deliveryDate: '2024-01-15',
-      agentId: 'AGT001',
-      agentName: 'Ahmed Hassan'
-    },
-    {
-      id: 4,
-      orderId: 'ORD004',
-      customerId: 'CUST004',
-      customerName: 'Emily Davis',
-      customerMobile: '+971 56 456 7890',
-      customerType: 'Individual',
-      breakfast: 1,
-      lunch: 1,
-      dinner: 1,
-      breakfastVeg: 1,
-      breakfastNonVeg: 0,
-      lunchVeg: 0,
-      lunchNonVeg: 1,
-      dinnerVeg: 1,
-      dinnerNonVeg: 0,
-      status: 'Delivered',
-      orderDate: '2024-01-14',
-      deliveryDate: '2024-01-14',
-      agentId: 'AGT003',
-      agentName: 'Omar Khalil'
-    },
-    {
-      id: 5,
-      orderId: 'ORD005',
-      customerId: 'CUST005',
-      customerName: 'David Wilson',
-      customerMobile: '+971 54 567 8901',
-      customerType: 'Company',
-      breakfast: 2,
-      lunch: 0,
-      dinner: 2,
-      breakfastVeg: 0,
-      breakfastNonVeg: 2,
-      dinnerVeg: 1,
-      dinnerNonVeg: 1,
-      status: 'Cancelled',
-      orderDate: '2024-01-14',
-      deliveryDate: '2024-01-14',
-      agentId: 'AGT004',
-      agentName: 'Aisha Rahman'
-    }
-  ]);
+  // Orders data from API
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('All');
@@ -125,19 +27,75 @@ const Orders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [isProcessingKitchenOrder, setIsProcessingKitchenOrder] = useState(false);
   const [editForm, setEditForm] = useState({
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-    breakfastVeg: 0,
-    breakfastNonVeg: 0,
-    lunchVeg: 0,
-    lunchNonVeg: 0,
-    dinnerVeg: 0,
-    dinnerNonVeg: 0
+    id: 0,
+    customerId: "",
+    customerName: "",
+    customerMobile: "",
+    preferenceType: "",
+    breakfast: {
+      vegQuantity: 0,
+      nonVegQuantity: 0,
+      totalQuantity: 0,
+      dietPreference: ""
+    },
+    lunch: {
+      vegQuantity: 0,
+      nonVegQuantity: 0,
+      totalQuantity: 0,
+      dietPreference: ""
+    },
+    dinner: {
+      vegQuantity: 0,
+      nonVegQuantity: 0,
+      totalQuantity: 0,
+      dietPreference: ""
+    },
+    total: 0,
+    date: "",
+    customerType: ""
   });
 
   const tableRef = useRef(null);
   const resizingRef = useRef(null);
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await GET_ORDERS();
+        setOrders(response.data || []);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to fetch orders. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -147,55 +105,120 @@ const Orders = () => {
       day: 'numeric'
     });
   };
-
-
+  
 
     const handleAddOrder = () => {
     navigate('/add-order');
   };
-
+  const AddOrder = () => {
+    const navigate = useNavigate();
+   
+  }
   const handleEditOrder = (orderId) => {
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
       setEditingOrder(order);
       setEditForm({
-        breakfast: order.breakfast,
-        lunch: order.lunch,
-        dinner: order.dinner,
-        breakfastVeg: order.breakfastVeg || 0,
-        breakfastNonVeg: order.breakfastNonVeg || 0,
-        lunchVeg: order.lunchVeg || 0,
-        lunchNonVeg: order.lunchNonVeg || 0,
-        dinnerVeg: order.dinnerVeg || 0,
-        dinnerNonVeg: order.dinnerNonVeg || 0
+        id: order.OrderAID || order.id || 0,
+        customerId: order.CustomerId || order.customerId || "",
+        customerName: order.CustomerName || order.customerName || "",
+        customerMobile: order.CustomerMobile || order.customerMobile || "",
+        preferenceType: order.preferenceType || "",
+        breakfast: {
+          vegQuantity: parseInt(order.breakfastVeg || 0),
+          nonVegQuantity: parseInt(order.breakfastNonVeg || 0),
+          totalQuantity: parseInt(order.breakfastTotal || 0),
+          dietPreference: order.breakfast?.dietPreference || ""
+        },
+        lunch: {
+          vegQuantity: parseInt(order.lunchVeg || 0),
+          nonVegQuantity: parseInt(order.lunchNonVeg || 0),
+          totalQuantity: parseInt(order.lunchTotal || 0),
+          dietPreference: order.lunch?.dietPreference || ""
+        },
+        dinner: {
+          vegQuantity: parseInt(order.dinnerVeg || 0),
+          nonVegQuantity: parseInt(order.dinnerNonVeg || 0),
+          totalQuantity: parseInt(order.dinnerTotal || 0),
+          dietPreference: order.dinner?.dietPreference || ""
+        },
+        total: parseInt(order.Total || order.total || 0),
+        date: order.OrderDate || order.date || order.createdAt || "",
+        customerType: order.CustomerType || order.customerType || ""
       });
       setIsEditModalOpen(true);
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingOrder) {
-      // Update the order in the orders array
-      const updatedOrders = orders.map(order => 
-        order.orderId === editingOrder.orderId 
-          ? { ...order, ...editForm }
-          : order
-      );
-      // In a real app, you would make an API call here
-      console.log('Updated order:', editingOrder.orderId, editForm);
-      setIsEditModalOpen(false);
-      setEditingOrder(null);
-      setEditForm({ 
-        breakfast: 0, 
-        lunch: 0, 
-        dinner: 0,
-        breakfastVeg: 0,
-        breakfastNonVeg: 0,
-        lunchVeg: 0,
-        lunchNonVeg: 0,
-        dinnerVeg: 0,
-        dinnerNonVeg: 0
-      });
+      try {
+        // Calculate total
+        const total = editForm.breakfast.totalQuantity + editForm.lunch.totalQuantity + editForm.dinner.totalQuantity;
+         // Prepare the update data in the new JSON structure
+        const updateData = {
+          ...editForm,
+          total: total
+        };
+        // Call the UPDATE_ORDERS API
+        const response = await UPDATE_ORDERS(updateData, editingOrder.orderId);
+        showToast('Order updated successfully');
+
+        // Update the order in the orders array
+        const updatedOrders = orders.map(order => 
+          order.orderId === editingOrder.orderId 
+            ? { 
+                ...order, 
+                ...updateData,
+                // Keep backward compatibility with existing field names
+                breakfastTotal: editForm.breakfast.totalQuantity,
+                lunchTotal: editForm.lunch.totalQuantity,
+                dinnerTotal: editForm.dinner.totalQuantity,
+                breakfastVeg: editForm.breakfast.vegQuantity,
+                breakfastNonVeg: editForm.breakfast.nonVegQuantity,
+                lunchVeg: editForm.lunch.vegQuantity,
+                lunchNonVeg: editForm.lunch.nonVegQuantity,
+                dinnerVeg: editForm.dinner.vegQuantity,
+                dinnerNonVeg: editForm.dinner.nonVegQuantity,
+                Total: total
+              }
+            : order
+        );
+        setOrders(updatedOrders);
+        setIsEditModalOpen(false);
+        setEditingOrder(null);
+        setEditForm({ 
+          id: 0,
+          customerId: "",
+          customerName: "",
+          customerMobile: "",
+          preferenceType: "",
+          breakfast: {
+            vegQuantity: 0,
+            nonVegQuantity: 0,
+            totalQuantity: 0,
+            dietPreference: ""
+          },
+          lunch: {
+            vegQuantity: 0,
+            nonVegQuantity: 0,
+            totalQuantity: 0,
+            dietPreference: ""
+          },
+          dinner: {
+            vegQuantity: 0,
+            nonVegQuantity: 0,
+            totalQuantity: 0,
+            dietPreference: ""
+          },
+          total: 0,
+          date: "",
+          customerType: ""
+        });
+      } catch (error) {
+        console.error('Error updating order:', error);
+       
+      }
     }
   };
 
@@ -203,54 +226,58 @@ const Orders = () => {
     setIsEditModalOpen(false);
     setEditingOrder(null);
     setEditForm({ 
-      breakfast: 0, 
-      lunch: 0, 
-      dinner: 0,
-      breakfastVeg: 0,
-      breakfastNonVeg: 0,
-      lunchVeg: 0,
-      lunchNonVeg: 0,
-      dinnerVeg: 0,
-      dinnerNonVeg: 0
+      id: 0,
+      customerId: "",
+      customerName: "",
+      customerMobile: "",
+      preferenceType: "",
+      breakfast: {
+        vegQuantity: 0,
+        nonVegQuantity: 0,
+        totalQuantity: 0,
+        dietPreference: ""
+      },
+      lunch: {
+        vegQuantity: 0,
+        nonVegQuantity: 0,
+        totalQuantity: 0,
+        dietPreference: ""
+      },
+      dinner: {
+        vegQuantity: 0,
+        nonVegQuantity: 0,
+        totalQuantity: 0,
+        dietPreference: ""
+      },
+      total: 0,
+      date: "",
+      customerType: ""
     });
   };
-
-  const handleDeleteOrder = (orderId) => {
-    if (window.confirm('Are you sure you want to delete this order?')) {
-      console.log('Delete order:', orderId);
-      // Add delete functionality here
-    }
-  };
-
   const handleDeliveryOrder = (clickedOrder) => {
+    console.log('handleDeliveryOrder called with:', clickedOrder);
+    
     if (isProcessingKitchenOrder) return;
 
     // Check if clicked order is for Company or Agent customer
-    if (!['Company', 'Agent'].includes(clickedOrder.customerType)) {
-      alert('Delivery orders are only available for Company and Agent customers.');
+    if (!['company', 'agent', 'Company', 'Agent'].includes(clickedOrder.CustomerType)) {
+      showToast('Delivery orders are only available for Company and Agent customers.', 'error');
       return;
     }
 
     // Filter orders for Company and Agent customers only
-    const deliveryOrders = orders.filter(order =>
-      ['Company', 'Agent'].includes(order.customerType)
+    const deliveryOrders = filteredOrders.filter(order =>
+      ['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType)
     );
 
+    console.log('Filtered delivery orders:', deliveryOrders);
+
     if (deliveryOrders.length === 0) {
-      alert('No delivery orders found for Company or Agent customers.');
+      showToast('No delivery orders found for Company or Agent customers.', 'error');
+      
       return;
     }
-
-    console.log('Generating delivery orders for:', deliveryOrders.length, 'orders');
-    console.log('Delivery orders found:', deliveryOrders.map(o => ({ orderId: o.orderId, customerName: o.customerName, customerType: o.customerType })));
-    
-    // Show alert with found orders for debugging
-    alert(`Found ${deliveryOrders.length} delivery orders:\n${deliveryOrders.map(o => `${o.orderId} - ${o.customerName} (${o.customerType})`).join('\n')}`);
-    
     setIsProcessingKitchenOrder(true);
-
-    // Generate all delivery orders content
-    console.log('Starting to generate delivery orders for each customer...');
     const allDeliveryOrders = deliveryOrders.map((order, index) => {
       const deliveryOrderNumber = `DEL${new Date().getFullYear()}${String(
         new Date().getMonth() + 1
@@ -259,7 +286,7 @@ const Orders = () => {
         '0'
       )}-${order.orderId}`;
 
-      console.log(`Generating delivery order ${index + 1} for: ${order.orderId} - ${order.customerName} (${order.customerType})`);
+      console.log(`Generating delivery order ${index + 1} for: ${order.orderId} - ${order.CustomerName} (${order.CustomerType})`);
 
       return `
         <div class="delivery-order">
@@ -288,15 +315,15 @@ const Orders = () => {
             <div class="section-title">Customer Info</div>
             <div class="field-row">
               <span class="field-label">Client / Company Name :</span>
-              <span class="field-line">${order.customerName || 'N/A'}</span>
+              <span class="field-line">${order.CustomerName || 'N/A'}</span>
             </div>
             <div class="field-row">
               <span class="field-label">Contact Number :</span>
-              <span class="field-line">${order.customerMobile || 'N/A'}</span>
+              <span class="field-line">${order.CustomerMobile || 'N/A'}</span>
             </div>
             <div class="field-row">
               <span class="field-label">Customer Type :</span>
-              <span class="field-line">${order.customerType}</span>
+              <span class="field-line">${order.CustomerType}</span>
             </div>
           </div>
           
@@ -315,19 +342,19 @@ const Orders = () => {
               <tbody>
                 <tr>
                   <td>Breakfast</td>
-                  <td>${order.breakfast || 0}</td>
+                  <td>${order.breakfastTotal || 0}</td>
                   <td>${order.breakfastVeg || 0}</td>
                   <td>${order.breakfastNonVeg || 0}</td>
                 </tr>
                 <tr>
                   <td>Lunch</td>
-                  <td>${order.lunch || 0}</td>
+                  <td>${order.lunchTotal || 0}</td>
                   <td>${order.lunchVeg || 0}</td>
                   <td>${order.lunchNonVeg || 0}</td>
                 </tr>
                 <tr>
                   <td>Dinner</td>
-                  <td>${order.dinner || 0}</td>
+                  <td>${order.dinnerTotal || 0}</td>
                   <td>${order.dinnerVeg || 0}</td>
                   <td>${order.dinnerNonVeg || 0}</td>
                 </tr>
@@ -353,8 +380,8 @@ const Orders = () => {
             <div class="notes-content">
               <div class="note-item">Please Verify Quantity Upon Delivery Time</div>
               <div class="note-item">Ensure All Items Are Accounted For</div>
-              <div class="note-item">Contact : ${order.customerMobile || 'N/A'}</div>
-              <div class="note-item">Customer Type : ${order.customerType}</div>
+              <div class="note-item">Contact : ${order.CustomerMobile || 'N/A'}</div>
+              <div class="note-item">Customer Type : ${order.CustomerType}</div>
             </div>
           </div>
         </div>
@@ -499,7 +526,7 @@ const Orders = () => {
       const windowName = `delivery_orders_${Date.now()}`;
       const printWindow = window.open('', windowName, 'width=900,height=700,scrollbars=yes,resizable=yes');
       if (!printWindow) {
-        alert("Please allow pop-ups for printing.");
+        showToast("Please allow pop-ups for printing.", 'error');
         setIsProcessingKitchenOrder(false);
         return;
       }
@@ -512,7 +539,7 @@ const Orders = () => {
       printWindow.focus();
       
       // Show success message
-      alert(`Successfully opened print window with ${deliveryOrders.length} delivery orders!`);
+      showToast(`Successfully opened print window with ${deliveryOrders.length} delivery orders!`, 'success');
       
       // Let the window load naturally
       setTimeout(() => {
@@ -527,7 +554,7 @@ const Orders = () => {
       }, 3000);
     } catch (error) {
       console.error('Error opening print window:', error);
-      alert('Error opening print window. Please try again.');
+      showToast('Error opening print window. Please try again.', 'error');
       setIsProcessingKitchenOrder(false);
     }
   };
@@ -564,16 +591,54 @@ const Orders = () => {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
-      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerId.toLowerCase().includes(searchTerm.toLowerCase());
+      (order.orderId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (order.CustomerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (order.CustomerId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (order.CustomerMobile?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     
-    const matchesCompany = companyFilter === 'All' || order.customerType === companyFilter;
+    const matchesCompany = companyFilter === 'All' || order.CustomerType === companyFilter;
     
     return matchesSearch && matchesCompany;
   });
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Orders</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50">
+       <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={hideToast}
+            />
        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 max-w-md">
@@ -584,7 +649,7 @@ const Orders = () => {
           </div>
           <input
             type="text"
-            placeholder="Search orders..."
+            placeholder="Search by customer name, order ID, mobile..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-12 pr-12 py-2 sm:py-2.5 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm sm:text-base bg-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -605,7 +670,7 @@ const Orders = () => {
         <div className="flex items-center gap-0">
           {/* Process Kitchen Order Button */}
           <KitchenOrderPrint 
-            orders={orders} 
+            orders={filteredOrders} 
             onProcessing={setIsProcessingKitchenOrder}
           />
 
@@ -628,30 +693,30 @@ const Orders = () => {
         {/* Meal Summary - Left Side */}
         <div className="flex flex-wrap gap-4">
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
-            <div>Breakfast: {orders.reduce((sum, order) => sum + order.breakfast, 0)}</div>
+            <div>Breakfast: {filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.breakfastVeg || 0), 0)}</span>
+              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.breakfastNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastNonVeg || 0), 0)}</span>
             </div>
           </div>
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
-            <div>Lunch: {orders.reduce((sum, order) => sum + order.lunch, 0)}</div>
+            <div>Lunch: {filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.lunchVeg || 0), 0)}</span>
+              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.lunchNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchNonVeg || 0), 0)}</span>
             </div>
           </div>
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
-            <div>Dinner: {orders.reduce((sum, order) => sum + order.dinner, 0)}</div>
+            <div>Dinner: {filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{orders.reduce((sum, order) => sum + (order.dinnerVeg || 0), 0)}</span>
+              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{orders.reduce((sum, order) => sum + (order.dinnerNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerNonVeg || 0), 0)}</span>
             </div>
           </div>
         </div>
@@ -667,8 +732,8 @@ const Orders = () => {
             >
               <option value="All">All</option>
               <option value="Individual">👤 Individual</option>
-              <option value="Company">🏢 Company</option>
-              <option value="Agent">🤝 Agent</option>
+              <option value="company">🏢 Company</option>
+              <option value="agent">🤝 Agent</option>
             </select>
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -681,7 +746,34 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Count and Table */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Showing {filteredOrders.length} of {orders.length} orders
+          {companyFilter !== 'All' && (
+            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+              Filtered by: {companyFilter}
+            </span>
+          )}
+          {searchTerm && (
+            <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+              Search: "{searchTerm}"
+            </span>
+          )}
+        </div>
+        {(companyFilter !== 'All' || searchTerm) && (
+          <button
+            onClick={() => {
+              setCompanyFilter('All');
+              setSearchTerm('');
+            }}
+            className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors duration-200 border border-red-200"
+          >
+            Clear Filters
+          </button>
+        )}
+      </div>
+      
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[1200px]" ref={tableRef}>
@@ -760,45 +852,41 @@ const Orders = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order.id} className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0">
+              {filteredOrders.map((order,index) => (
+                <tr key={index} className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0">
                   <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
                     {order.orderId}
                   </td>
                   <td className="p-3 sm:p-4 align-middle">
                     <div>
-                      <div className="font-medium text-gray-900">{order.customerName}</div>
-                      <div className="text-sm text-gray-500 font-mono">{order.customerId}</div>
-                      <div className="text-xs text-gray-400">{order.customerMobile}</div>
+                      <div className="font-medium text-gray-900">{order.CustomerName}</div>
+                      <div className="text-sm text-gray-500 font-mono">{order.CustomerType}</div>
+                      <div className="text-xs text-gray-400">{order.CustomerMobile}</div>
                     </div>
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
-                    {order.customerType === 'Individual' && (
+                    {order.CustomerType === 'Individual' && (
                       <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 shadow-sm">
                         👤 Individual
                       </div>
                     )}
-                    {order.customerType === 'Company' && (
+                    {order.CustomerType === 'company' && (
                       <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
                         🏢 Company
                       </div>
                     )}
-                    {order.customerType === 'Agent' && (
+                    {order.CustomerType === 'agent' && (
                       <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-sm">
                         🤝 Agent
                       </div>
                     )}
-                    {order.customerType === 'Customer' && (
-                      <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm">
-                        👥 Customer
-                      </div>
-                    )}
+                    
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
-                    {order.breakfast > 0 ? (
+                    {order.breakfastTotal > 0 ? (
                       <div className="space-y-1">
                         <div className="inline-flex items-center justify-center px-3 py-2 mb-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-sm">
-                          {order.breakfast}
+                          {order.breakfastTotal}
                         </div>
                         {(order.breakfastVeg !== undefined || order.breakfastNonVeg !== undefined) && (
                           <div className="text-xs space-y-1">
@@ -822,10 +910,10 @@ const Orders = () => {
                     )}
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
-                    {order.lunch > 0 ? (
+                    {order.lunchTotal > 0 ? (
                       <div className="space-y-1">
                         <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
-                          {order.lunch}
+                          {order.lunchTotal}
                         </div>
                         {(order.lunchVeg !== undefined || order.lunchNonVeg !== undefined) && (
                           <div className="text-xs space-y-1">
@@ -849,10 +937,10 @@ const Orders = () => {
                     )}
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
-                    {order.dinner > 0 ? (
+                    {order.dinnerTotal > 0 ? (
                       <div className="space-y-1">
                         <div className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-sm">
-                          {order.dinner}
+                          {order.dinnerTotal}
                         </div>
                         {(order.dinnerVeg !== undefined || order.dinnerNonVeg !== undefined) && (
                           <div className="text-xs space-y-1">
@@ -893,12 +981,12 @@ const Orders = () => {
                       </button>
                       
                       {/* Delivery Order Button - Only for Company and Agent customers */}
-                      {['Company', 'Agent'].includes(order.customerType) && (
+                      {['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType) && (
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Delivery order button clicked for:', order.orderId, order.customerName, order.customerType);
+                            console.log('Delivery order button clicked for:', order.orderId, order.CustomerName, order.CustomerType);
                             handleDeliveryOrder(order);
                           }}
                           disabled={isProcessingKitchenOrder}
@@ -925,8 +1013,16 @@ const Orders = () => {
 
       {/* Edit Order Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          onClick={handleCancelEdit}
+        >
+          <div 
+            className="bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative border border-white/20"
+            style={{ position: 'relative', zIndex: 51 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-800">
                 Edit Order - {editingOrder?.orderId}
@@ -942,11 +1038,35 @@ const Orders = () => {
             </div>
 
             <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer: {editingOrder?.customerName}
-                </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Order ID</label>
+                  <div className="text-sm font-semibold text-gray-800">{editingOrder?.orderId}</div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Customer Type</label>
+                  <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerType}</div>
+                </div>
               </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name</label>
+                  <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerName}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Contact Number</label>
+                    <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerMobile || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Order Date</label>
+                    <div className="text-sm font-semibold text-gray-800">
+                      {editingOrder?.OrderDate ? formatDate(editingOrder.OrderDate) : 
+                       editingOrder?.createdAt ? formatDate(editingOrder.createdAt) : 
+                       editingOrder?.orderDate ? formatDate(editingOrder.orderDate) : 
+                       'N/A'}
+                    </div>
+                  </div>
+                </div>
 
               <div className="space-y-6">
                 {/* Breakfast Section */}
@@ -961,31 +1081,49 @@ const Orders = () => {
                       <input
                         type="number"
                         min="0"
-                        value={editForm.breakfast}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, breakfast: parseInt(e.target.value) || 0 }))}
+                        value={editForm.breakfast.totalQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          breakfast: { 
+                            ...prev.breakfast, 
+                            totalQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
                       />
                     </div>
-                                                               <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.breakfastVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, breakfastVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.breakfastNonVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, breakfastNonVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.breakfast.vegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          breakfast: { 
+                            ...prev.breakfast, 
+                            vegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Non-Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.breakfast.nonVegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          breakfast: { 
+                            ...prev.breakfast, 
+                            nonVegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1001,31 +1139,49 @@ const Orders = () => {
                       <input
                         type="number"
                         min="0"
-                        value={editForm.lunch}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, lunch: parseInt(e.target.value) || 0 }))}
+                        value={editForm.lunch.totalQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          lunch: { 
+                            ...prev.lunch, 
+                            totalQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
                     </div>
-                                                               <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.lunchVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, lunchVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.lunchNonVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, lunchNonVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.lunch.vegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          lunch: { 
+                            ...prev.lunch, 
+                            vegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Non-Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.lunch.nonVegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          lunch: { 
+                            ...prev.lunch, 
+                            nonVegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1041,31 +1197,49 @@ const Orders = () => {
                       <input
                         type="number"
                         min="0"
-                        value={editForm.dinner}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, dinner: parseInt(e.target.value) || 0 }))}
+                        value={editForm.dinner.totalQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          dinner: { 
+                            ...prev.dinner, 
+                            totalQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
                       />
                     </div>
-                                                               <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.dinnerVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, dinnerVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Nveg</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editForm.dinnerNonVeg}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, dinnerNonVeg: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.dinner.vegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          dinner: { 
+                            ...prev.dinner, 
+                            vegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Non-Veg</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.dinner.nonVegQuantity}
+                        onChange={(e) => setEditForm(prev => ({ 
+                          ...prev, 
+                          dinner: { 
+                            ...prev.dinner, 
+                            nonVegQuantity: parseInt(e.target.value) || 0 
+                          } 
+                        }))}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1073,19 +1247,19 @@ const Orders = () => {
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-700 mb-2">Total Meals:</div>
                 <div className="text-2xl font-bold text-gray-900 mb-2">
-                  {editForm.breakfast + editForm.lunch + editForm.dinner}
+                  {editForm.breakfast.totalQuantity + editForm.lunch.totalQuantity + editForm.dinner.totalQuantity}
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center">
                     <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                     <span className="text-green-700 font-bold">
-                      {editForm.breakfastVeg + editForm.lunchVeg + editForm.dinnerVeg}
+                      {editForm.breakfast.vegQuantity + editForm.lunch.vegQuantity + editForm.dinner.vegQuantity}
                     </span>
                   </div>
                   <div className="flex items-center">
                     <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                     <span className="text-red-700 font-bold">
-                      {editForm.breakfastNonVeg + editForm.lunchNonVeg + editForm.dinnerNonVeg}
+                      {editForm.breakfast.nonVegQuantity + editForm.lunch.nonVegQuantity + editForm.dinner.nonVegQuantity}
                     </span>
                   </div>
                 </div>

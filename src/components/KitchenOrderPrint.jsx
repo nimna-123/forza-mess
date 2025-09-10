@@ -6,7 +6,7 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
 
     // Filter orders for Company or Agent only
     const deliveryOrders = orders.filter(order =>
-      ['Company', 'Agent'].includes(order.customerType)
+      ['company', 'agent'].includes(order.CustomerType)
     );
 
     if (deliveryOrders.length === 0) {
@@ -56,17 +56,17 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
                 <div class="info-row">
                   <span class="label">Client / Company Name</span>
                   <span class="colon">:</span>
-                  <span class="value">${order.customerName}</span>
+                  <span class="value">${order.CustomerName}</span>
                 </div>
                 <div class="info-row">
                   <span class="label">Contact Number</span>
                   <span class="colon">:</span>
-                  <span class="value">${order.customerMobile || '_________________'}</span>
+                  <span class="value">${order.CustomerMobile || '_________________'}</span>
                 </div>
                 <div class="info-row">
                   <span class="label">Customer Type</span>
                   <span class="colon">:</span>
-                  <span class="value">${order.customerType}</span>
+                  <span class="value">${order.CustomerType}</span>
                 </div>
               </div>
             </div>
@@ -86,19 +86,19 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
                 <tbody>
                   <tr>
                     <td>Breakfast</td>
-                    <td>${order.breakfast || 0}</td>
+                    <td>${order.breakfastTotal || 0}</td>
                     <td>${order.breakfastVeg || 0}</td>
                     <td>${order.breakfastNonVeg || 0}</td>
                   </tr>
                   <tr>
                     <td>Lunch</td>
-                    <td>${order.lunch || 0}</td>
+                    <td>${order.lunchTotal || 0}</td>
                     <td>${order.lunchVeg || 0}</td>
                     <td>${order.lunchNonVeg || 0}</td>
                   </tr>
                   <tr>
                     <td>Dinner</td>
-                    <td>${order.dinner || 0}</td>
+                    <td>${order.dinnerTotal || 0}</td>
                     <td>${order.dinnerVeg || 0}</td>
                     <td>${order.dinnerNonVeg || 0}</td>
                   </tr>
@@ -126,8 +126,8 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
               <ul class="notes-list">
                 <li>Please Verify Quantity Upon Delivery Time</li>
                 <li>Any discrepancy should be reported immediately</li>
-                <li>Customer Type: ${order.customerType}</li>
-                <li>Delivery Date: ${order.deliveryDate || order.orderDate || new Date().toLocaleDateString('en-GB')}</li>
+                <li>Customer Type: ${order.CustomerType}</li>
+                <li>Delivery Date: ${order.deliveryDate || order.OrderDate || new Date().toLocaleDateString('en-GB')}</li>
                
               </ul>
             </div>
@@ -369,40 +369,41 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
   };
 
   const handleProcessKitchenOrder = () => {
-    // Notify parent component that processing has started
+    console.log(orders);
+    
     if (onProcessing) {
       onProcessing(true);
     }
 
     // Filter orders for Individual, Company, and Agent customers only
     const kitchenOrders = orders.filter(order => 
-      ['Individual', 'Company', 'Agent'].includes(order.customerType)
+      ['Individual', 'company', 'agent'].includes(order.CustomerType)
     );
 
     // Calculate summary data by customer type
-    const individualOrders = kitchenOrders.filter(order => order.customerType === 'Individual');
-    const companyOrders = kitchenOrders.filter(order => order.customerType === 'Company');
-    const agentOrders = kitchenOrders.filter(order => order.customerType === 'Agent');
+    const individualOrders = kitchenOrders.filter(order => order.CustomerType === 'Individual');
+    const companyOrders = kitchenOrders.filter(order => order.CustomerType === 'company');
+    const agentOrders = kitchenOrders.filter(order => order.CustomerType === 'agent');
 
-    const individualBreakfast = individualOrders.reduce((sum, order) => sum + order.breakfast, 0);
-    const individualLunch = individualOrders.reduce((sum, order) => sum + order.lunch, 0);
-    const individualDinner = individualOrders.reduce((sum, order) => sum + order.dinner, 0);
+    const individualBreakfast = individualOrders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0);
+    const individualLunch = individualOrders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0);
+    const individualDinner = individualOrders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0);
 
-    const companyBreakfast = companyOrders.reduce((sum, order) => sum + order.breakfast, 0);
-    const companyLunch = companyOrders.reduce((sum, order) => sum + order.lunch, 0);
-    const companyDinner = companyOrders.reduce((sum, order) => sum + order.dinner, 0);
+    const companyBreakfast = companyOrders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0);
+    const companyLunch = companyOrders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0);
+    const companyDinner = companyOrders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0);
 
-    const agentBreakfast = agentOrders.reduce((sum, order) => sum + order.breakfast, 0);
-    const agentLunch = agentOrders.reduce((sum, order) => sum + order.lunch, 0);
-    const agentDinner = agentOrders.reduce((sum, order) => sum + order.dinner, 0);
+    const agentBreakfast = agentOrders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0);
+    const agentLunch = agentOrders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0);
+    const agentDinner = agentOrders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0);
 
     // Calculate total veg and non-veg counts for each meal type
-    const totalBreakfastVeg = kitchenOrders.reduce((sum, order) => sum + (order.breakfastVeg || 0), 0);
-    const totalBreakfastNonVeg = kitchenOrders.reduce((sum, order) => sum + (order.breakfastNonVeg || 0), 0);
-    const totalLunchVeg = kitchenOrders.reduce((sum, order) => sum + (order.lunchVeg || 0), 0);
-    const totalLunchNonVeg = kitchenOrders.reduce((sum, order) => sum + (order.lunchNonVeg || 0), 0);
-    const totalDinnerVeg = kitchenOrders.reduce((sum, order) => sum + (order.dinnerVeg || 0), 0);
-    const totalDinnerNonVeg = kitchenOrders.reduce((sum, order) => sum + (order.dinnerNonVeg || 0), 0);
+    const totalBreakfastVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.breakfastVeg || 0), 0);
+    const totalBreakfastNonVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.breakfastNonVeg || 0), 0);
+    const totalLunchVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.lunchVeg || 0), 0);
+    const totalLunchNonVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.lunchNonVeg || 0), 0);
+    const totalDinnerVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.dinnerVeg || 0), 0);
+    const totalDinnerNonVeg = kitchenOrders.reduce((sum, order) => sum + parseInt(order.dinnerNonVeg || 0), 0);
 
     // Calculate totals
     const totalBreakfast = individualBreakfast + companyBreakfast + agentBreakfast;

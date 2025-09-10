@@ -3,10 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import breakfastImg from '../assets/images/breakfast.png';
 import lunchImg from '../assets/images/lunch.png';
 import dinnerImg from '../assets/images/dinner.png';
+import { ADD_INDIVIDUAL } from '../Api/service';
+import Toast from '../components/Toast';
 
 const AddCustomer = () => {
   const navigate = useNavigate();
-  
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -88,50 +110,45 @@ const AddCustomer = () => {
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Customer data to be saved:', formData);
-      
-                    // Reset form after successful submission
-        setFormData({
-          name: '',
-          mobile: '',
-          address: '',
-          joinedDate: '',
-          price: '',
-          paymentMode: 'Card',
-          dietPreference: 'veg',
-          meals: {
-            breakfast: true,
-            lunch: true,
-            dinner: true
-          }
-        });
-      
-             alert('Customer added successfully!');
-       navigate('/individual');
-      
-    } catch (error) {
-      console.error('Error adding customer:', error);
-      alert('Error adding customer. Please try again.');
-    } finally {
+      const response = await ADD_INDIVIDUAL( formData);
       setIsSubmitting(false);
+      showToast("Customer added successfully!", "success");
+      setFormData({
+        name: '',
+        mobile: '',
+        address: '',
+        joinedDate: '',
+        price: '',
+        paymentMode: 'Card',
+        dietPreference: 'veg',
+        meals: {
+          breakfast: true,
+          lunch: true,
+          dinner: true
+        }
+      });
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      setIsSubmitting(false);
+      showToast("Failed to add customer", "error");
     }
   };
-
-
-
+  
   return (
+    <>
+      <Toast
+            message={toast.message}
+            type={toast.type}
+            isVisible={toast.isVisible}
+            onClose={hideToast}
+          />
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
       
@@ -548,6 +565,7 @@ const AddCustomer = () => {
       
       </div>
     </div>
+    </>
   );
 };
 

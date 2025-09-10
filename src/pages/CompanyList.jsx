@@ -1,109 +1,62 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Switch from '../components/Switch';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
 import EditCompanyModal from '../components/EditCompanyModal';
+import { GET_CUSTOMERS, UPDATE_CUSTOMERS, CUSTOMER_UPDATE_STATUS } from '../Api/service';
+import Toast from '../components/Toast';
 
 const CompanyList = () => {
   const navigate = useNavigate();
-  // Sample company data - in a real app, this would come from an API
-  const [companies] = useState([
-    {
-      id: 1,
-      companyId: 'CMP001',
-      name: 'Tech Solutions Ltd',
-      contactPerson: 'Ahmed Hassan',
-      mobile: '+971 50 111 2222',
-      address: 'Dubai Internet City, Building 3, Floor 5, Dubai',
-      registeredDate: '2023-06-15',
-      tradeLicense: 'TL-2023-001234',
-      taxNumber: 'TRN-123456789',
-      breakfastPrice: 'AED 25',
-      lunchPrice: 'AED 45',
-      dinnerPrice: 'AED 55',
-      creditLimit: 'AED 50,000',
-      creditDays: 30,
-      status: 'Active',
-     
-    },
-    {
-      id: 2,
-      companyId: 'CMP002',
-      name: 'Global Trading Co',
-      contactPerson: 'Fatima Al Mansouri',
-      mobile: '+971 55 222 3333',
-      address: 'Abu Dhabi Business District, Tower A, Abu Dhabi',
-      registeredDate: '2023-08-20',
-      tradeLicense: 'TL-2023-005678',
-      taxNumber: 'TRN-987654321',
-      breakfastPrice: 'AED 30',
-      lunchPrice: 'AED 50',
-      dinnerPrice: 'AED 60',
-      creditLimit: 'AED 75,000',
-      creditDays: 45,
-      status: 'Active',
-      
-    },
-    {
-      id: 3,
-      companyId: 'CMP003',
-      name: 'Innovation Systems',
-      contactPerson: 'Omar Khalil',
-      mobile: '+971 52 333 4444',
-      address: 'Sharjah Technology Park, Block B, Sharjah',
-      registeredDate: '2023-09-10',
-      tradeLicense: 'TL-2023-009876',
-      taxNumber: 'TRN-456789123',
-      breakfastPrice: 'AED 20',
-      lunchPrice: 'AED 40',
-      dinnerPrice: 'AED 50',
-      creditLimit: 'AED 25,000',
-      creditDays: 15,
-      status: 'Inactive',
-      
-    },
-    {
-      id: 4,
-      companyId: 'CMP004',
-      name: 'Digital Dynamics',
-      contactPerson: 'Aisha Rahman',
-      mobile: '+971 56 444 5555',
-      address: 'Dubai Silicon Oasis, Building A, Dubai',
-      registeredDate: '2023-11-05',
-      tradeLicense: 'TL-2023-012345',
-      taxNumber: 'TRN-789123456',
-      breakfastPrice: 'AED 28',
-      lunchPrice: 'AED 48',
-      dinnerPrice: 'AED 58',
-      creditLimit: 'AED 60,000',
-      creditDays: 30,
-      status: 'Active',
-      
-    },
-    {
-      id: 5,
-      companyId: 'CMP005',
-      name: 'Future Technologies',
-      contactPerson: 'Youssef Ibrahim',
-      mobile: '+971 54 555 6666',
-      address: 'Ajman Free Zone, Technology Hub, Ajman',
-      registeredDate: '2024-01-12',
-      tradeLicense: 'TL-2024-001111',
-      taxNumber: 'TRN-111222333',
-      breakfastPrice: 'AED 22',
-      lunchPrice: 'AED 42',
-      dinnerPrice: 'AED 52',
-      creditLimit: 'AED 35,000',
-      creditDays: 20,
-      status: 'Active',
-      
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await GET_CUSTOMERS("company");
+      const companiesList = response.data
+      setCompanies(companiesList || []);
+    } catch (err) {
+      console.error("Error fetching companies:", err);
+      setError("Failed to fetch companies. Please try again later.");
+      setCompanies([]); // fallback
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+  useEffect(() => {
+
+
+    fetchCompanies();
+  }, []);
 
 
 
   const [columnWidths, setColumnWidths] = useState({
-    companyId: 140,
+    slNo: 80,
     name: 250,
     contactPerson: 200,
     mobile: 160,
@@ -111,13 +64,8 @@ const CompanyList = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [companyStatuses, setCompanyStatuses] = useState({
-    'CMP001': true,
-    'CMP002': true,
-    'CMP003': false,
-    'CMP004': true,
-    'CMP005': true
-  });
+  const [updatingStatuses, setUpdatingStatuses] = useState(new Set());
+  const [companyStatuses, setCompanyStatuses] = useState({});
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
@@ -130,20 +78,27 @@ const CompanyList = () => {
   };
 
   const handleSaveCompany = async (updatedCompany) => {
-    // In a real app, this would be an API call
-    console.log('Updated company data:', updatedCompany);
-    
-    // Update the companies array with the new data
-    const updatedCompanies = companies.map(company => 
-      company.id === updatedCompany.id ? updatedCompany : company
-    );
-    
-    // For demo purposes, we'll just log the update
-    // In a real app, you would update your state or make an API call
-    console.log('Company updated successfully:', updatedCompany.name);
-    
-    // You could also show a success message here
-    alert(`Company "${updatedCompany.name}" updated successfully!`);
+
+    const transformedCompany = {
+      ...updatedCompany,
+      creditDays: String(updatedCompany.creditDays),
+      companyName: updatedCompany.name,
+
+    };
+
+    try {
+      const response = await UPDATE_CUSTOMERS(
+        transformedCompany,
+        "company",
+        updatedCompany.id
+      );
+      if (response.success === true) {
+        showToast("Company updated successfully!", "success");
+        fetchCompanies()
+      }
+    } catch (error) {
+      console.error("Failed to update company:", error);
+    }
   };
 
   const handleAddCompany = () => {
@@ -159,21 +114,36 @@ const CompanyList = () => {
     setIsDetailsModalOpen(true);
   };
 
-  const handleStatusChange = (companyId, newStatus) => {
-    setCompanyStatuses(prev => ({
-      ...prev,
-      [companyId]: newStatus
-    }));
-    
-    console.log(`Company ${companyId} status changed to: ${newStatus ? 'Active' : 'Inactive'}`);
+  const handleStatusChange = async (companyId, newStatus) => {
+    setUpdatingStatuses(prev => new Set([...prev, companyId]));
+
+    try {
+      const response = await CUSTOMER_UPDATE_STATUS(newStatus, companyId);
+      if (response.success === true) {
+        // Update local state to reflect the new status
+        setCompanyStatuses(prev => ({
+          ...prev,
+          [companyId]: newStatus === 'Active'
+        }));
+
+        showToast(`Company status updated to ${newStatus}`, 'success');
+      } else {
+        throw new Error(response.message || 'Failed to update company status');
+      }
+    } catch (error) {
+      console.error('Error updating company status:', error);
+      showToast('Failed to update company status. Please try again.', 'error');
+
+
+    } finally {
+      setUpdatingStatuses(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(companyId);
+        return newSet;
+      });
+    }
   };
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.companyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.mobile.includes(searchTerm)
-  );
 
   const startResize = (e, columnKey) => {
     e.preventDefault();
@@ -186,11 +156,11 @@ const CompanyList = () => {
 
   const handleMouseMove = (e) => {
     if (!resizingRef.current) return;
-    
+
     const { columnKey, startX, startWidth } = resizingRef.current;
     const deltaX = e.clientX - startX;
     const newWidth = Math.max(80, startWidth + deltaX);
-    
+
     setColumnWidths(prev => ({
       ...prev,
       [columnKey]: newWidth
@@ -207,7 +177,12 @@ const CompanyList = () => {
 
   return (
     <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50">
-
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
       {/* Search and Add Company Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         {/* Left Section - Search Bar */}
@@ -261,129 +236,188 @@ const CompanyList = () => {
             </svg>
             <span>Add Company</span>
           </button>
+
+
         </div>
       </div>
 
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-                     <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[850px]" ref={tableRef}>
-            <thead className="bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-700">
-              <tr>
-                <th 
-                  className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.companyId }}
-                >
-                  Company ID
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'companyId')}
-                  ></div>
-                </th>
-                <th 
-                  className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.name }}
-                >
-                  Company Name
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'name')}
-                  ></div>
-                </th>
-                <th 
-                  className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.contactPerson }}
-                >
-                  Contact Person
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'contactPerson')}
-                  ></div>
-                </th>
-                <th 
-                  className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.mobile }}
-                >
-                  Mobile
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'mobile')}
-                  ></div>
-                </th>
-                <th 
-                  className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
-                  style={{ width: columnWidths.actions }}
-                >
-                  Actions
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
-                    onMouseDown={(e) => startResize(e, 'actions')}
-                  ></div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-                             {filteredCompanies.map((company) => (
-                 <tr 
-                   key={company.id} 
-                   className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"
-                   onClick={() => handleRowClick(company)}
-                 >
-                  <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
-                    {company.companyId}
-                  </td>
-                  <td className="p-3 sm:p-4 align-middle font-medium text-gray-800">
-                    {company.name}
-                  </td>
-                  <td className="p-3 sm:p-4 align-middle text-gray-600">
-                    {company.contactPerson}
-                  </td>
-                  <td className="p-3 sm:p-4 align-middle text-gray-600 font-mono">
-                    {company.mobile}
-                  </td>
-                                     <td className="p-3 sm:p-4 align-middle">
-                     <div className="flex justify-center items-center gap-2 w-full h-full" onClick={(e) => e.stopPropagation()}>
-                       {/* Edit Button */}
-                       <button
-                         onClick={() => handleEdit(company)}
-                         className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                         title="Edit Company"
-                       >
-                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                         </svg>
-                       </button>
-                       
-                       {/* Status Switch */}
-                       <Switch
-                         checked={companyStatuses[company.companyId]}
-                         onChange={(newStatus) => handleStatusChange(company.companyId, newStatus)}
-                         size="sm"
-                       />
-                     </div>
-                   </td>
+      {/* Data Count Display */}
+      {!loading && !error && (
+        <div className="mb-4 text-sm text-gray-600">
+          <span className="font-medium">{companies.length}</span> company{companies.length !== 1 ? 'ies' : 'y'} found
+          {searchTerm && (
+            <span className="ml-2">
+              (filtered from search: "{searchTerm}")
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Loading and Error States */}
+      {loading && (
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading companies...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-8 text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={refreshCompanies}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && companies.length === 0 && (
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-8 text-center">
+          <div className="text-gray-400 mb-4">
+            <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <p className="text-gray-600 font-medium">No companies found</p>
+          <p className="text-gray-500 text-sm mt-2">Get started by adding your first company</p>
+        </div>
+      )}
+
+      {!loading && !error && companies.length > 0 && (
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[850px]" ref={tableRef}>
+              <thead className="bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-700">
+                <tr>
+                  <th
+                    className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                    style={{ width: columnWidths.slNo }}
+                  >
+                    SL No
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                      onMouseDown={(e) => startResize(e, 'slNo')}
+                    ></div>
+                  </th>
+                  <th
+                    className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                    style={{ width: columnWidths.name }}
+                  >
+                    Company Name
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                      onMouseDown={(e) => startResize(e, 'name')}
+                    ></div>
+                  </th>
+                  <th
+                    className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                    style={{ width: columnWidths.contactPerson }}
+                  >
+                    Contact Person
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                      onMouseDown={(e) => startResize(e, 'contactPerson')}
+                    ></div>
+                  </th>
+                  <th
+                    className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                    style={{ width: columnWidths.mobile }}
+                  >
+                    Mobile
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                      onMouseDown={(e) => startResize(e, 'mobile')}
+                    ></div>
+                  </th>
+                  <th
+                    className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                    style={{ width: columnWidths.actions }}
+                  >
+                    Actions
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                      onMouseDown={(e) => startResize(e, 'actions')}
+                    ></div>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-                 </div>
-       </div>
+              </thead>
+              <tbody>
+                {companies.map((company, index) => (
+                  <tr
+                    key={company.id}
+                    className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"
+                    onClick={() => handleRowClick(company)}
+                  >
+                    <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
+                      {index + 1}
+                    </td>
+                    <td className="p-3 sm:p-4 align-middle font-medium text-gray-800">
+                      {company.name}
+                    </td>
+                    <td className="p-3 sm:p-4 align-middle text-gray-600">
+                      {company.contactPerson}
+                    </td>
+                    <td className="p-3 sm:p-4 align-middle text-gray-600 font-mono">
+                      {company.mobile}
+                    </td>
+                    <td className="p-3 sm:p-4 align-middle">
+                      <div className="flex justify-center items-center gap-2 w-full h-full" onClick={(e) => e.stopPropagation()}>
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => handleEdit(company)}
+                          className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                          title="Edit Company"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
 
-       {/* Company Details Modal */}
-       <CompanyDetailsModal
-         isOpen={isDetailsModalOpen}
-         onClose={() => setIsDetailsModalOpen(false)}
-         company={selectedCompany}
-       />
 
-       {/* Edit Company Modal */}
-       <EditCompanyModal
-         isOpen={isEditModalOpen}
-         onClose={() => setIsEditModalOpen(false)}
-         company={selectedCompany}
-         onSave={handleSaveCompany}
-       />
-     </div>
-   );
- };
+                        {/* Status Switch */}
+                        <div className="relative">
+                          <Switch
+                            checked={companyStatuses[company.id] !== undefined ? companyStatuses[company.id] : company.status === 'Active'}
+                            onChange={(newChecked) =>
+                              handleStatusChange(company.id, newChecked ? 'Active' : 'Inactive')
+                            }
+                            size="sm"
+                            disabled={updatingStatuses.has(company.id)}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Company Details Modal */}
+      <CompanyDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        company={selectedCompany}
+      />
+
+      {/* Edit Company Modal */}
+      <EditCompanyModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        company={selectedCompany}
+        onSave={handleSaveCompany}
+      />
+    </div>
+  );
+};
 
 export default CompanyList;

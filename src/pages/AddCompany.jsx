@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ADD_COMPANY } from '../Api/service';
+import Toast from '../components/Toast';
 
 const AddCompany = () => {
   const navigate = useNavigate();
@@ -21,6 +23,26 @@ const AddCompany = () => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -107,57 +129,55 @@ const AddCompany = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Company data to be saved:', formData);
-      
-                    // Reset form after successful submission
-        setFormData({
-          companyName: '',
-          contactPerson: '',
-          mobile: '',
-          address: '',
-          registeredDate: '',
-          tradeLicense: '',
-          taxNumber: '',
-          breakfastPrice: '',
-          lunchPrice: '',
-          dinnerPrice: '',
-          creditLimit: '',
-          creditDays: ''
-        });
-      
-      alert('Company added successfully!');
-      navigate('/company');
-      
-    } catch (error) {
-      console.error('Error adding company:', error);
-      alert('Error adding company. Please try again.');
-    } finally {
+     try {
+      const response = await ADD_COMPANY(formData);
       setIsSubmitting(false);
+      showToast("Add Company successfully!", "success");
+      setFormData({
+        companyName: '',
+        contactPerson: '',
+        mobile: '',
+        address: '',
+        registeredDate: '',
+        tradeLicense: '',
+        taxNumber: '',
+        breakfastPrice: '',
+        lunchPrice: '',
+        dinnerPrice: '',
+        creditLimit: '',
+        creditDays: ''
+      });
+    } catch (error) {
+      console.error("Error adding company:", error);
+      setIsSubmitting(false);
+      showToast("Failed to add company", "error");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+    <>
+     
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
       
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
-            <h2 className="text-xl font-semibold text-white">Add New Company</h2>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto">
+      
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+              <h2 className="text-xl font-semibold text-white">Add New Company</h2>
+            </div>
 
-          <form onSubmit={handleSubmit} className="p-6 lg:p-8">
+            <form onSubmit={handleSubmit} className="p-6 lg:p-8">
                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                              {/* Company Name */}
                <div>
@@ -438,12 +458,13 @@ const AddCompany = () => {
                 Cancel
               </button>
             </div>
-          </form>
-        </div>
+                       </form>
+           </div>
 
-      </div>
-    </div>
-  );
-};
+         </div>
+       </div>
+     </>
+   );
+ };
 
 export default AddCompany;

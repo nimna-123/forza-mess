@@ -1,8 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ADD_AGENT } from '../Api/service';
+import Toast from '../components/Toast';
 
 const AddAgent = () => {
   const navigate = useNavigate();
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
+
   
   const [formData, setFormData] = useState({
     name: '',
@@ -94,40 +117,38 @@ const AddAgent = () => {
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Agent data to be saved:', formData);
-      
-      // Reset form after successful submission
-      setFormData({
-        name: '',
-        mobile: '',
-        address: '',
-        joinedDate: '',
-        breakfastPrice: '',
-        lunchPrice: '',
-        dinnerPrice: '',
-        creditLimit: '',
-        creditDays: ''
-      });
-      
-      alert('Agent added successfully!');
-      navigate('/agent-list');
-      
-    } catch (error) {
-      console.error('Error adding agent:', error);
-      alert('Error adding agent. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        const response = await ADD_AGENT( formData);
+        setIsSubmitting(false);
+        showToast("Agent added successfully!", "success");
+        setFormData({
+          name: '',
+          mobile: '',
+          address: '',
+          joinedDate: '',
+          breakfastPrice: '',
+          lunchPrice: '',
+          dinnerPrice: '',
+          creditLimit: '',
+          creditDays: ''
+        });
+       
+      } catch (error) {
+        console.error("Error adding Agent:", error);
+        setIsSubmitting(false);
+        showToast("Failed to add Agent", "error");
+      }
+    };
 
   return (
+    <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
       
@@ -369,7 +390,9 @@ const AddAgent = () => {
 
       </div>
     </div>
+    </>
   );
+ 
 };
 
 export default AddAgent;
