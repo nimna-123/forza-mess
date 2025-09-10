@@ -195,7 +195,7 @@ const Summary = () => {
                             Order #{activity.orderId}
                           </span>
                           <span className="text-sm font-bold text-green-600">
-                            ₹{activity.total?.toFixed(2)}
+                            QTY: {activity.total?.toFixed(2)}
                           </span>
                         </div>
                         

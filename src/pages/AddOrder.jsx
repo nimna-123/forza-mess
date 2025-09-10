@@ -70,15 +70,18 @@ const AddOrder = () => {
           console.error('Error fetching company customers:', companyError);
          
         }
-        
-        // Combine both arrays
+        // Combine both arrays and filter for active customers only
         const allCustomers = [...agentCustomers, ...companyCustomers];
+        const activeCustomers = allCustomers.filter(customer => 
+          customer.status === 'Active' || customer.isActive === true || customer.isActive === 'true'
+        );
         console.log('Total customers loaded:', allCustomers.length);
-        if (allCustomers.length === 0) {
-          showToast('No customers found. Please check if customers exist in the system.', 'error');
+        console.log('Active customers:', activeCustomers.length);
+        if (activeCustomers.length === 0) {
+          showToast('No active customers found. Please check if active customers exist in the system.', 'error');
         } else {
-          setCustomers(allCustomers);
-          showToast(`Loaded ${allCustomers.length} customers successfully`, 'success');
+          setCustomers(activeCustomers);
+          showToast(`Loaded ${activeCustomers.length} active customers successfully`, 'success');
         }
       } catch (error) {
         console.error('Unexpected error loading customers:', error);

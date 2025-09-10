@@ -107,7 +107,7 @@ const Orders = () => {
   };
   
 
-    const handleAddOrder = () => {
+  const handleAddOrder = () => {
     navigate('/add-order');
   };
   const AddOrder = () => {
@@ -255,17 +255,13 @@ const Orders = () => {
     });
   };
   const handleDeliveryOrder = (clickedOrder) => {
-    console.log('handleDeliveryOrder called with:', clickedOrder);
-    
-    if (isProcessingKitchenOrder) return;
-
-    // Check if clicked order is for Company or Agent customer
-    if (!['company', 'agent', 'Company', 'Agent'].includes(clickedOrder.CustomerType)) {
-      showToast('Delivery orders are only available for Company and Agent customers.', 'error');
-      return;
-    }
-
-    // Filter orders for Company and Agent customers only
+      if (isProcessingKitchenOrder) return;
+      // Check if clicked order is for Company or Agent customer
+      if (!['company', 'agent', 'Company', 'Agent'].includes(clickedOrder.CustomerType)) {
+        showToast('Delivery orders are only available for Company and Agent customers.', 'error');
+        return;
+      }
+      // Filter orders for Company and Agent customers only
     const deliveryOrders = filteredOrders.filter(order =>
       ['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType)
     );
