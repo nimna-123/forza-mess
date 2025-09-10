@@ -11,7 +11,7 @@ const AddCompany = () => {
     contactPerson: '',
     mobile: '',
     address: '',
-    registeredDate: '',
+    registeredDate: new Date().toISOString().split('T')[0],
     tradeLicense: '',
     taxNumber: '',
     breakfastPrice: '',
@@ -95,26 +95,18 @@ const AddCompany = () => {
 
     if (!formData.breakfastPrice.trim()) {
       newErrors.breakfastPrice = 'Breakfast price is required';
-    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.breakfastPrice) || parseFloat(formData.breakfastPrice) < 0) {
-      newErrors.breakfastPrice = 'Please enter a valid price (e.g., 25.50)';
-    }
+    } 
 
     if (!formData.lunchPrice.trim()) {
       newErrors.lunchPrice = 'Lunch price is required';
-    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.lunchPrice) || parseFloat(formData.lunchPrice) < 0) {
-      newErrors.lunchPrice = 'Please enter a valid price (e.g., 35.00)';
-    }
+    } 
 
     if (!formData.dinnerPrice.trim()) {
       newErrors.dinnerPrice = 'Dinner price is required';
-    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.dinnerPrice) || parseFloat(formData.dinnerPrice) < 0) {
-      newErrors.dinnerPrice = 'Please enter a valid price (e.g., 45.75)';
-    }
+    } 
 
     if (!formData.creditLimit.trim()) {
       newErrors.creditLimit = 'Credit limit is required';
-    } else if (!/^\d+(\.\d{1,2})?$/.test(formData.creditLimit) || parseFloat(formData.creditLimit) < 0) {
-      newErrors.creditLimit = 'Please enter a valid amount (e.g., 5000.00)';
     }
 
     if (!formData.creditDays.trim()) {
@@ -142,7 +134,7 @@ const AddCompany = () => {
         contactPerson: '',
         mobile: '',
         address: '',
-        registeredDate: '',
+        registeredDate: new Date().toISOString().split('T')[0],
         tradeLicense: '',
         taxNumber: '',
         breakfastPrice: '',

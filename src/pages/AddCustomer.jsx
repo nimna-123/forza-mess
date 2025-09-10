@@ -33,7 +33,7 @@ const AddCustomer = () => {
     name: '',
     mobile: '',
     address: '',
-    joinedDate: '',
+    joinedDate: new Date().toISOString().split('T')[0],
     price: '',
     paymentMode: 'Card',
     dietPreference: 'veg',
@@ -96,9 +96,7 @@ const AddCustomer = () => {
 
     if (!formData.price.trim()) {
       newErrors.price = 'Price is required';
-    } else if (!/^AED\s\d{1,3}(,\d{3})*\.\d{2}$/.test(formData.price)) {
-      newErrors.price = 'Price must be in format AED X,XXX.XX';
-    }
+    } 
 
     const selectedMeals = Object.values(formData.meals).filter(Boolean).length;
     if (selectedMeals === 0) {
@@ -124,7 +122,7 @@ const AddCustomer = () => {
         name: '',
         mobile: '',
         address: '',
-        joinedDate: '',
+        joinedDate: new Date().toISOString().split('T')[0],
         price: '',
         paymentMode: 'Card',
         dietPreference: 'veg',
