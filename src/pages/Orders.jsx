@@ -1,27 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KitchenOrderPrint from '../components/KitchenOrderPrint';
-import { GET_ORDERS,UPDATE_ORDERS } from '../Api/service';
+import { GET_ORDERS, UPDATE_ORDERS } from '../Api/service';
 import Toast from '../components/Toast';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const Orders = () => {
   const navigate = useNavigate();
-  
+
   // Orders data from API
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const handleFilter = () => {
+    if (startDate && endDate) {
+      onFilter({ startDate, endDate }); // API call handler
+    } else {
+      alert("Please select both start and end dates");
+    }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('All');
   const [columnWidths, setColumnWidths] = useState({
-    orderId: 120,
-    customer: 200,
-    type: 120,
-    breakfast: 120,
-    lunch: 120,
-    dinner: 120,
-    actions: 120
+    orderId: 100,
+    customer: 180,
+    status: 100,
+    type: 100,
+    breakfast: 100,
+    lunch: 100,
+    dinner: 100,
+    actions: 100
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -105,14 +119,14 @@ const Orders = () => {
       day: 'numeric'
     });
   };
-  
+
 
   const handleAddOrder = () => {
     navigate('/add-order');
   };
   const AddOrder = () => {
     const navigate = useNavigate();
-   
+
   }
   const handleEditOrder = (orderId) => {
     const order = orders.find(o => o.orderId === orderId);
@@ -155,7 +169,7 @@ const Orders = () => {
       try {
         // Calculate total
         const total = editForm.breakfast.totalQuantity + editForm.lunch.totalQuantity + editForm.dinner.totalQuantity;
-         // Prepare the update data in the new JSON structure
+        // Prepare the update data in the new JSON structure
         const updateData = {
           ...editForm,
           total: total
@@ -165,29 +179,29 @@ const Orders = () => {
         showToast('Order updated successfully');
 
         // Update the order in the orders array
-        const updatedOrders = orders.map(order => 
-          order.orderId === editingOrder.orderId 
-            ? { 
-                ...order, 
-                ...updateData,
-                // Keep backward compatibility with existing field names
-                breakfastTotal: editForm.breakfast.totalQuantity,
-                lunchTotal: editForm.lunch.totalQuantity,
-                dinnerTotal: editForm.dinner.totalQuantity,
-                breakfastVeg: editForm.breakfast.vegQuantity,
-                breakfastNonVeg: editForm.breakfast.nonVegQuantity,
-                lunchVeg: editForm.lunch.vegQuantity,
-                lunchNonVeg: editForm.lunch.nonVegQuantity,
-                dinnerVeg: editForm.dinner.vegQuantity,
-                dinnerNonVeg: editForm.dinner.nonVegQuantity,
-                Total: total
-              }
+        const updatedOrders = orders.map(order =>
+          order.orderId === editingOrder.orderId
+            ? {
+              ...order,
+              ...updateData,
+              // Keep backward compatibility with existing field names
+              breakfastTotal: editForm.breakfast.totalQuantity,
+              lunchTotal: editForm.lunch.totalQuantity,
+              dinnerTotal: editForm.dinner.totalQuantity,
+              breakfastVeg: editForm.breakfast.vegQuantity,
+              breakfastNonVeg: editForm.breakfast.nonVegQuantity,
+              lunchVeg: editForm.lunch.vegQuantity,
+              lunchNonVeg: editForm.lunch.nonVegQuantity,
+              dinnerVeg: editForm.dinner.vegQuantity,
+              dinnerNonVeg: editForm.dinner.nonVegQuantity,
+              Total: total
+            }
             : order
         );
         setOrders(updatedOrders);
         setIsEditModalOpen(false);
         setEditingOrder(null);
-        setEditForm({ 
+        setEditForm({
           id: 0,
           customerId: "",
           customerName: "",
@@ -217,7 +231,7 @@ const Orders = () => {
         });
       } catch (error) {
         console.error('Error updating order:', error);
-       
+
       }
     }
   };
@@ -225,7 +239,7 @@ const Orders = () => {
   const handleCancelEdit = () => {
     setIsEditModalOpen(false);
     setEditingOrder(null);
-    setEditForm({ 
+    setEditForm({
       id: 0,
       customerId: "",
       customerName: "",
@@ -255,13 +269,13 @@ const Orders = () => {
     });
   };
   const handleDeliveryOrder = (clickedOrder) => {
-      if (isProcessingKitchenOrder) return;
-      // Check if clicked order is for Company or Agent customer
-      if (!['company', 'agent', 'Company', 'Agent'].includes(clickedOrder.CustomerType)) {
-        showToast('Delivery orders are only available for Company and Agent customers.', 'error');
-        return;
-      }
-      // Filter orders for Company and Agent customers only
+    if (isProcessingKitchenOrder) return;
+    // Check if clicked order is for Company or Agent customer
+    if (!['company', 'agent', 'Company', 'Agent'].includes(clickedOrder.CustomerType)) {
+      showToast('Delivery orders are only available for Company and Agent customers.', 'error');
+      return;
+    }
+    // Filter orders for Company and Agent customers only
     const deliveryOrders = filteredOrders.filter(order =>
       ['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType)
     );
@@ -270,7 +284,7 @@ const Orders = () => {
 
     if (deliveryOrders.length === 0) {
       showToast('No delivery orders found for Company or Agent customers.', 'error');
-      
+
       return;
     }
     setIsProcessingKitchenOrder(true);
@@ -385,7 +399,7 @@ const Orders = () => {
     }).join('');
 
     console.log('Final delivery orders HTML length:', allDeliveryOrders.length);
-    
+
     // Print Page Content
     const printContent = `
       <!DOCTYPE html>
@@ -533,10 +547,10 @@ const Orders = () => {
 
       // Focus the window
       printWindow.focus();
-      
+
       // Show success message
       showToast(`Successfully opened print window with ${deliveryOrders.length} delivery orders!`, 'success');
-      
+
       // Let the window load naturally
       setTimeout(() => {
         console.log('Print window loaded successfully for all delivery orders');
@@ -566,11 +580,11 @@ const Orders = () => {
 
   const handleMouseMove = (e) => {
     if (!resizingRef.current) return;
-    
+
     const { columnKey, startX, startWidth } = resizingRef.current;
     const deltaX = e.clientX - startX;
     const newWidth = Math.max(80, startWidth + deltaX);
-    
+
     setColumnWidths(prev => ({
       ...prev,
       [columnKey]: newWidth
@@ -586,14 +600,14 @@ const Orders = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+    const matchesSearch =
       (order.orderId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (order.CustomerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (order.CustomerId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (order.CustomerMobile?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    
+
     const matchesCompany = companyFilter === 'All' || order.CustomerType === companyFilter;
-    
+
     return matchesSearch && matchesCompany;
   });
   // Show loading state
@@ -629,13 +643,13 @@ const Orders = () => {
 
   return (
     <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50">
-       <Toast
-                message={toast.message}
-                type={toast.type}
-                isVisible={toast.isVisible}
-                onClose={hideToast}
-            />
-       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 max-w-md">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -665,9 +679,9 @@ const Orders = () => {
         {/* Buttons Container - Right Aligned */}
         <div className="flex items-center gap-0">
           {/* Process Kitchen Order Button */}
-          <KitchenOrderPrint 
-            orders={filteredOrders} 
-            onProcessing={setIsProcessingKitchenOrder}
+          <KitchenOrderPrint
+            orders={filteredOrders}
+            onProcessing={ setIsProcessingKitchenOrder }
           />
 
           {/* Add Order Button */}
@@ -718,27 +732,63 @@ const Orders = () => {
         </div>
 
         {/* Company Filter - Right Side */}
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-          <div className="relative bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-            <select
-              value={companyFilter}
-              onChange={(e) => setCompanyFilter(e.target.value)}
-              className="block w-full px-6 py-3 pr-12 text-sm font-medium text-gray-700 bg-transparent border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 appearance-none cursor-pointer min-w-[200px] hover:text-indigo-600 transition-colors duration-200"
+        <div className="relative group w-2/3">
+          {/* <div className="absolute inset-0  bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div> */}
+          <div className='flex items-end
+          gap-14  justify-end'>
+            <div className='flex items-end gap-3  '>
+            <div className="flex flex-col">
+              <label className="text-gray-700 text-base mb-1">Start Date</label>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select start date"
+                className="w-40 px-4 py-2 text-gray-700 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="flex flex-col">
+              <label className="text-gray-700 text-base mb-1">End Date</label>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select end date"
+                className="w-40 px-4 py-2 text-gray-700 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+              />
+            </div>
+
+            {/* OK Button */}
+            <button
+              onClick={handleFilter}
+              className="bg-gradient-to-r cursor-pointer from-indigo-500 to-purple-600 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <option value="All">All</option>
-              <option value="Individual">👤 Individual</option>
-              <option value="company">🏢 Company</option>
-              <option value="agent">🤝 Agent</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                </svg>
+              OK
+            </button>
+            </div>
+            <div className="relative bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <select
+                value={companyFilter}
+                onChange={(e) => setCompanyFilter(e.target.value)}
+                className="block w-full px-6 py-3 pr-12 text-sm font-medium text-gray-700 bg-transparent border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 appearance-none cursor-pointer min-w-[200px] hover:text-indigo-600 transition-colors duration-200"
+              >
+                <option value="All">All</option>
+                <option value="Individual">👤 Individual</option>
+                <option value="company">🏢 Company</option>
+                <option value="agent">🤝 Agent</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -769,86 +819,96 @@ const Orders = () => {
           </button>
         )}
       </div>
-      
+
       <div className="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs sm:text-sm table-fixed min-w-[1200px]" ref={tableRef}>
             <thead className="bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-700">
               <tr>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.orderId }}
                 >
                   Order ID
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'orderId')}
                   ></div>
                 </th>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.customer }}
                 >
                   Customer
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'customer')}
                   ></div>
                 </th>
-                <th 
+                <th
+                  className="p-3 sm:p-4 text-left font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
+                  style={{ width: columnWidths.status }}
+                >
+                  Status
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
+                    onMouseDown={(e) => startResize(e, 'status')}
+                  ></div>
+                </th>
+                <th
                   className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.type }}
                 >
                   Type
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'type')}
                   ></div>
                 </th>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.breakfast }}
                 >
                   Breakfast
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'breakfast')}
                   ></div>
                 </th>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.lunch }}
                 >
                   Lunch
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'lunch')}
                   ></div>
                 </th>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.dinner }}
                 >
                   Dinner
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'dinner')}
                   ></div>
                 </th>
-                <th 
+                <th
                   className="p-3 sm:p-4 text-center font-semibold text-xs sm:text-sm uppercase tracking-wider relative select-none"
                   style={{ width: columnWidths.actions }}
                 >
                   Actions
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600" 
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent cursor-col-resize transition-colors duration-200 hover:bg-gray-400 active:bg-gray-600"
                     onMouseDown={(e) => startResize(e, 'actions')}
                   ></div>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order,index) => (
+              {filteredOrders.map((order, index) => (
                 <tr key={index} className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0">
                   <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
                     {order.orderId}
@@ -859,6 +919,9 @@ const Orders = () => {
                       <div className="text-sm text-gray-500 font-mono">{order.CustomerType}</div>
                       <div className="text-xs text-gray-400">{order.CustomerMobile}</div>
                     </div>
+                  </td>
+                  <td className="p-3 sm:p-4 align-middle">
+                    <div className='text-lg text-gray-500 font-mono'>{order.OrderStaus}</div>
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.CustomerType === 'Individual' && (
@@ -876,7 +939,7 @@ const Orders = () => {
                         🤝 Agent
                       </div>
                     )}
-                    
+
                   </td>
                   <td className="p-3 sm:p-4 align-middle text-center">
                     {order.breakfastTotal > 0 ? (
@@ -964,18 +1027,17 @@ const Orders = () => {
                       <button
                         onClick={() => handleEditOrder(order.orderId)}
                         disabled={isProcessingKitchenOrder}
-                        className={`transition-colors duration-200 p-1 rounded ${
-                          isProcessingKitchenOrder 
-                            ? 'text-gray-400 cursor-not-allowed' 
+                        className={`transition-colors duration-200 p-1 rounded ${isProcessingKitchenOrder
+                            ? 'text-gray-400 cursor-not-allowed'
                             : 'text-blue-600 hover:text-blue-900 hover:bg-blue-50'
-                        }`}
+                          }`}
                         title={isProcessingKitchenOrder ? "Edit disabled while processing kitchen order" : "Edit Order"}
                       >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      
+
                       {/* Delivery Order Button - Only for Company and Agent customers */}
                       {['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType) && (
                         <button
@@ -986,11 +1048,10 @@ const Orders = () => {
                             handleDeliveryOrder(order);
                           }}
                           disabled={isProcessingKitchenOrder}
-                          className={`transition-colors duration-200 p-1 rounded ${
-                            isProcessingKitchenOrder 
-                              ? 'text-gray-400 cursor-not-allowed' 
+                          className={`transition-colors duration-200 p-1 rounded ${isProcessingKitchenOrder
+                              ? 'text-gray-400 cursor-not-allowed'
                               : 'text-green-600 hover:text-green-900 hover:bg-green-50'
-                          }`}
+                            }`}
                           title={isProcessingKitchenOrder ? "Delivery order disabled while processing" : "Print All Delivery Orders"}
                         >
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1009,12 +1070,12 @@ const Orders = () => {
 
       {/* Edit Order Modal */}
       {isEditModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 p-4"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={handleCancelEdit}
         >
-          <div 
+          <div
             className="bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative border border-white/20"
             style={{ position: 'relative', zIndex: 51 }}
             onClick={(e) => e.stopPropagation()}
@@ -1044,25 +1105,25 @@ const Orders = () => {
                   <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerType}</div>
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name</label>
+                <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerName}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name</label>
-                  <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerName}</div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Contact Number</label>
+                  <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerMobile || 'N/A'}</div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Contact Number</label>
-                    <div className="text-sm font-semibold text-gray-800">{editingOrder?.CustomerMobile || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Order Date</label>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {editingOrder?.OrderDate ? formatDate(editingOrder.OrderDate) : 
-                       editingOrder?.createdAt ? formatDate(editingOrder.createdAt) : 
-                       editingOrder?.orderDate ? formatDate(editingOrder.orderDate) : 
-                       'N/A'}
-                    </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Order Date</label>
+                  <div className="text-sm font-semibold text-gray-800">
+                    {editingOrder?.OrderDate ? formatDate(editingOrder.OrderDate) :
+                      editingOrder?.createdAt ? formatDate(editingOrder.createdAt) :
+                        editingOrder?.orderDate ? formatDate(editingOrder.orderDate) :
+                          'N/A'}
                   </div>
                 </div>
+              </div>
 
               <div className="space-y-6">
                 {/* Breakfast Section */}
@@ -1078,12 +1139,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.breakfast.totalQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          breakfast: { 
-                            ...prev.breakfast, 
-                            totalQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          breakfast: {
+                            ...prev.breakfast,
+                            totalQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
                       />
@@ -1094,12 +1155,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.breakfast.vegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          breakfast: { 
-                            ...prev.breakfast, 
-                            vegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          breakfast: {
+                            ...prev.breakfast,
+                            vegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
@@ -1110,12 +1171,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.breakfast.nonVegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          breakfast: { 
-                            ...prev.breakfast, 
-                            nonVegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          breakfast: {
+                            ...prev.breakfast,
+                            nonVegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
                       />
@@ -1136,12 +1197,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.lunch.totalQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          lunch: { 
-                            ...prev.lunch, 
-                            totalQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          lunch: {
+                            ...prev.lunch,
+                            totalQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
@@ -1152,12 +1213,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.lunch.vegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          lunch: { 
-                            ...prev.lunch, 
-                            vegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          lunch: {
+                            ...prev.lunch,
+                            vegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
@@ -1168,12 +1229,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.lunch.nonVegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          lunch: { 
-                            ...prev.lunch, 
-                            nonVegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          lunch: {
+                            ...prev.lunch,
+                            nonVegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
                       />
@@ -1194,12 +1255,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.dinner.totalQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          dinner: { 
-                            ...prev.dinner, 
-                            totalQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          dinner: {
+                            ...prev.dinner,
+                            totalQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
                       />
@@ -1210,12 +1271,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.dinner.vegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          dinner: { 
-                            ...prev.dinner, 
-                            vegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          dinner: {
+                            ...prev.dinner,
+                            vegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
@@ -1226,12 +1287,12 @@ const Orders = () => {
                         type="number"
                         min="0"
                         value={editForm.dinner.nonVegQuantity}
-                        onChange={(e) => setEditForm(prev => ({ 
-                          ...prev, 
-                          dinner: { 
-                            ...prev.dinner, 
-                            nonVegQuantity: parseInt(e.target.value) || 0 
-                          } 
+                        onChange={(e) => setEditForm(prev => ({
+                          ...prev,
+                          dinner: {
+                            ...prev.dinner,
+                            nonVegQuantity: parseInt(e.target.value) || 0
+                          }
                         }))}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
                       />

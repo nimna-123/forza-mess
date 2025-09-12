@@ -13,6 +13,9 @@ import AddOrder from './pages/AddOrder';
 import Orders from './pages/Orders';
 import './App.css';
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // Custom hook to scroll to top on route changes
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -193,6 +196,15 @@ const App = () => {
             } 
           />
         </Routes>
+        <ToastContainer 
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={true}
+          newestOnTop={false}
+          closeOnClick
+          draggable
+          theme="light"
+        />
       </div>
     </Router>
   );

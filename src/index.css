@@ -83,3 +83,33 @@ input[type="number"]::-moz-number-spin-box {
 .animate-fade-in-down {
   animation: fade-in-down 0.3s ease-out;
 }
+
+.react-datepicker {
+  font-family: 'Inter', sans-serif;
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.react-datepicker__header {
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  color: white;
+  border-bottom: none;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: #6366f1 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+.react-datepicker__day:hover {
+  background: #e0e7ff;
+  border-radius: 50%;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+}

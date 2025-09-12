@@ -8,3 +8,5 @@ export const POST_ORDER = 'postOrder'
 export const GET_ORDER = 'getOrders'
 export const UPDATE_ORDER = 'putOrder'
 export const DASHBOARD_DATA = 'getCustomerDashboard'
+
+export const LOGIN_USER = 'DQ/login'
