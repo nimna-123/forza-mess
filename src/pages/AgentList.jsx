@@ -171,10 +171,10 @@ const AgentList = () => {
     }
   };
 
-  const filteredAgents = agents.filter(agent =>
-    agent.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.mobile?.includes(searchTerm)
+  const filteredAgents = agents?.filter(agent =>
+    agent?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+ 
+    agent?.mobile?.includes(searchTerm)
   );
 
 
@@ -420,7 +420,7 @@ const AgentList = () => {
                 </tr>
               </thead>
               <tbody>
-                {agents.map((agent, index) => (
+                {filteredAgents.map((agent, index) => (
                   <tr
                     key={agent.id}
                     className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"

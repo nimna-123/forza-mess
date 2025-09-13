@@ -1,29 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KitchenOrderPrint from '../components/KitchenOrderPrint';
-import { GET_ORDERS, UPDATE_ORDERS } from '../Api/service';
 import Toast from '../components/Toast';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import useGetOrders from '../Api/hooks/queries/useGetOrders';
+import useUpdateOrder from '../Api/hooks/mutations/useUpdateOrder';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Orders = () => {
   const navigate = useNavigate();
 
-  // Orders data from API
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [timeUp, setTimeUp] = useState(false);
+
   const [error, setError] = useState(null);
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-
-  const handleFilter = () => {
-    if (startDate && endDate) {
-      onFilter({ startDate, endDate }); // API call handler
-    } else {
-      alert("Please select both start and end dates");
-    }
-  };
+  const [entryDate, setEntryDate] = useState(null);
+  const [orderDate, setOrderDate] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('All');
@@ -37,6 +30,9 @@ const Orders = () => {
     dinner: 100,
     actions: 100
   });
+
+  const queryClient = useQueryClient();
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [isProcessingKitchenOrder, setIsProcessingKitchenOrder] = useState(false);
@@ -69,6 +65,16 @@ const Orders = () => {
     customerType: ""
   });
 
+    useEffect(() => {
+      const now = new Date();
+      if (now.getHours() >= 22) {
+        setTimeUp(true)
+        warning.error("Time is up! You can only place orders for the day after tomorrow.")
+      } else {
+        setTimeUp(false)
+      }
+    }, []);
+
   const tableRef = useRef(null);
   const resizingRef = useRef(null);
   const [toast, setToast] = useState({
@@ -92,24 +98,16 @@ const Orders = () => {
     }));
   };
 
-  // Fetch orders from API
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await GET_ORDERS();
-        setOrders(response.data || []);
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Failed to fetch orders. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const filters = {
+    orderDate: entryDate || undefined,
+    orderForDate: orderDate || undefined,
+    customerType: companyFilter !== "All" ? companyFilter : undefined,
+    orderId:  undefined,
+  };
 
-    fetchOrders();
-  }, []);
+  const { data: orders,  isLoading } = useGetOrders(filters)
+
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -128,6 +126,23 @@ const Orders = () => {
     const navigate = useNavigate();
 
   }
+
+const resetEditForm = () => {
+  setEditForm({
+    id: 0,
+    customerId: "",
+    customerName: "",
+    customerMobile: "",
+    preferenceType: "",
+    breakfast: { vegQuantity: 0, nonVegQuantity: 0, totalQuantity: 0, dietPreference: "" },
+    lunch: { vegQuantity: 0, nonVegQuantity: 0, totalQuantity: 0, dietPreference: "" },
+    dinner: { vegQuantity: 0, nonVegQuantity: 0, totalQuantity: 0, dietPreference: "" },
+    total: 0,
+    date: "",
+    customerType: ""
+  });
+};
+
   const handleEditOrder = (orderId) => {
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
@@ -164,77 +179,45 @@ const Orders = () => {
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (editingOrder) {
-      try {
-        // Calculate total
-        const total = editForm.breakfast.totalQuantity + editForm.lunch.totalQuantity + editForm.dinner.totalQuantity;
-        // Prepare the update data in the new JSON structure
-        const updateData = {
-          ...editForm,
-          total: total
-        };
-        // Call the UPDATE_ORDERS API
-        const response = await UPDATE_ORDERS(updateData, editingOrder.orderId);
-        showToast('Order updated successfully');
+  const { mutate: updateOrder } = useUpdateOrder();
 
-        // Update the order in the orders array
-        const updatedOrders = orders.map(order =>
-          order.orderId === editingOrder.orderId
-            ? {
-              ...order,
-              ...updateData,
-              // Keep backward compatibility with existing field names
-              breakfastTotal: editForm.breakfast.totalQuantity,
-              lunchTotal: editForm.lunch.totalQuantity,
-              dinnerTotal: editForm.dinner.totalQuantity,
-              breakfastVeg: editForm.breakfast.vegQuantity,
-              breakfastNonVeg: editForm.breakfast.nonVegQuantity,
-              lunchVeg: editForm.lunch.vegQuantity,
-              lunchNonVeg: editForm.lunch.nonVegQuantity,
-              dinnerVeg: editForm.dinner.vegQuantity,
-              dinnerNonVeg: editForm.dinner.nonVegQuantity,
-              Total: total
-            }
-            : order
-        );
-        setOrders(updatedOrders);
+  const handleSaveEdit = () => {
+  if (!editingOrder) return;
+
+  // Calculate total
+  const total =
+    editForm.breakfast.totalQuantity +
+    editForm.lunch.totalQuantity +
+    editForm.dinner.totalQuantity;
+
+  // Prepare the update data
+  const updateData = {
+    ...editForm,
+    total,
+  };
+
+  // Call mutation instead of direct API
+  updateOrder(
+    {
+      data: updateData,
+      orderId: editingOrder.orderId,
+      orderAID: editingOrder.OrderAID, // if required in headers/params
+    },
+    {
+      onSuccess: () => {
+        showToast("Order updated successfully");
+        queryClient.invalidateQueries(["orders"]);
+        // ✅ UI updates (modal + form reset)
         setIsEditModalOpen(false);
         setEditingOrder(null);
-        setEditForm({
-          id: 0,
-          customerId: "",
-          customerName: "",
-          customerMobile: "",
-          preferenceType: "",
-          breakfast: {
-            vegQuantity: 0,
-            nonVegQuantity: 0,
-            totalQuantity: 0,
-            dietPreference: ""
-          },
-          lunch: {
-            vegQuantity: 0,
-            nonVegQuantity: 0,
-            totalQuantity: 0,
-            dietPreference: ""
-          },
-          dinner: {
-            vegQuantity: 0,
-            nonVegQuantity: 0,
-            totalQuantity: 0,
-            dietPreference: ""
-          },
-          total: 0,
-          date: "",
-          customerType: ""
-        });
-      } catch (error) {
-        console.error('Error updating order:', error);
-
-      }
+        resetEditForm();
+      },
+      onError: (error) => {
+        console.error("Error updating order:", error);
+      },
     }
-  };
+  );
+};
 
   const handleCancelEdit = () => {
     setIsEditModalOpen(false);
@@ -276,7 +259,7 @@ const Orders = () => {
       return;
     }
     // Filter orders for Company and Agent customers only
-    const deliveryOrders = filteredOrders.filter(order =>
+    const deliveryOrders = orders.filter(order =>
       ['company', 'agent', 'Company', 'Agent'].includes(order.CustomerType)
     );
 
@@ -599,7 +582,7 @@ const Orders = () => {
     document.body.style.userSelect = '';
   };
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders?.filter(order => {
     const matchesSearch =
       (order.orderId?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (order.CustomerName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
@@ -611,7 +594,7 @@ const Orders = () => {
     return matchesSearch && matchesCompany;
   });
   // Show loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-5 sm:p-8 lg:p-10 min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -680,7 +663,7 @@ const Orders = () => {
         <div className="flex items-center gap-0">
           {/* Process Kitchen Order Button */}
           <KitchenOrderPrint
-            orders={filteredOrders}
+            orders={orders}
             onProcessing={ setIsProcessingKitchenOrder }
           />
 
@@ -703,30 +686,30 @@ const Orders = () => {
         {/* Meal Summary - Left Side */}
         <div className="flex flex-wrap gap-4">
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-md">
-            <div>Breakfast: {filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0)}</div>
+            <div>Breakfast: {orders.reduce((sum, order) => sum + parseInt(order.breakfastTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastVeg || 0), 0)}</span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + parseInt(order.breakfastVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.breakfastNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + parseInt(order.breakfastNonVeg || 0), 0)}</span>
             </div>
           </div>
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-md">
-            <div>Lunch: {filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0)}</div>
+            <div>Lunch: {orders.reduce((sum, order) => sum + parseInt(order.lunchTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchVeg || 0), 0)}</span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + parseInt(order.lunchVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.lunchNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + parseInt(order.lunchNonVeg || 0), 0)}</span>
             </div>
           </div>
           <div className="inline-flex flex-col items-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-md">
-            <div>Dinner: {filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0)}</div>
+            <div>Dinner: {orders.reduce((sum, order) => sum + parseInt(order.dinnerTotal || 0), 0)}</div>
             <div className="flex items-center gap-2 mt-1 text-xs">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="text-green-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerVeg || 0), 0)}</span>
+              <span className="text-green-700">{orders.reduce((sum, order) => sum + parseInt(order.dinnerVeg || 0), 0)}</span>
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span className="text-red-700">{filteredOrders.reduce((sum, order) => sum + parseInt(order.dinnerNonVeg || 0), 0)}</span>
+              <span className="text-red-700">{orders.reduce((sum, order) => sum + parseInt(order.dinnerNonVeg || 0), 0)}</span>
             </div>
           </div>
         </div>
@@ -738,35 +721,28 @@ const Orders = () => {
           gap-14  justify-end'>
             <div className='flex items-end gap-3  '>
             <div className="flex flex-col">
-              <label className="text-gray-700 text-base mb-1">Start Date</label>
+              <label className="text-gray-700 text-base mb-1">Entry Date</label>
               <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
+                selected={entryDate}
+                onChange={(date) => setEntryDate(date)}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="Select start date"
+                placeholderText="Select Entry date"
                 className="w-40 px-4 py-2 text-gray-700 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
               />
             </div>
 
             {/* End Date */}
             <div className="flex flex-col">
-              <label className="text-gray-700 text-base mb-1">End Date</label>
+              <label className="text-gray-700 text-base mb-1">Order Date</label>
               <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
+                selected={orderDate}
+                onChange={(date) => setOrderDate(date)}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="Select end date"
+                placeholderText="Select Order date"
                 className="w-40 px-4 py-2 text-gray-700 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
               />
             </div>
 
-            {/* OK Button */}
-            <button
-              onClick={handleFilter}
-              className="bg-gradient-to-r cursor-pointer from-indigo-500 to-purple-600 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-            >
-              OK
-            </button>
             </div>
             <div className="relative bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
               <select
@@ -788,14 +764,13 @@ const Orders = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
       {/* Orders Count and Table */}
       <div className="mb-4 flex justify-between items-center">
         <div className="text-sm text-gray-600">
-          Showing {filteredOrders.length} of {orders.length} orders
+          Showing {orders.length} of {orders.length} orders
           {companyFilter !== 'All' && (
             <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
               Filtered by: {companyFilter}
@@ -908,7 +883,7 @@ const Orders = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order, index) => (
+              {orders?.map((order, index) => (
                 <tr key={index} className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0">
                   <td className="p-3 sm:p-4 align-middle font-semibold text-indigo-600 font-mono">
                     {order.orderId}

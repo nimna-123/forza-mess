@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const KitchenOrderPrint = ({ orders, onProcessing }) => {
-  const handleDeliveryOrder = () => {
-    if (onProcessing) onProcessing(true);
 
+  const [processed, setProcessed] = useState(false)
+  console.log(processed)
+  const handleDeliveryOrder = () => {
+   
+    if (onProcessing) onProcessing(true);
+    
     // Filter orders for Company or Agent only
     const deliveryOrders = orders.filter(order =>
       ['company', 'agent'].includes(order.CustomerType)
@@ -17,7 +21,7 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
 
     // Generate all delivery notes with improved design
     const allDeliveryNotes = deliveryOrders.map((order, index) => {
-      const deliveryOrderNumber = `DEL${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}${String(Math.floor(Math.random()*1000)).padStart(3,'0')}-${index+1}`;
+      const deliveryOrderNumber = `DEL${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}-${index + 1}`;
 
       return `
         <div class="delivery-order" style="page-break-after: ${index === deliveryOrders.length - 1 ? 'auto' : 'always'}; min-height: 100vh;">
@@ -370,13 +374,13 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
 
   const handleProcessKitchenOrder = () => {
     console.log(orders);
-    
+    setProcessed(true);
     if (onProcessing) {
       onProcessing(true);
     }
 
     // Filter orders for Individual, Company, and Agent customers only
-    const kitchenOrders = orders.filter(order => 
+    const kitchenOrders = orders.filter(order =>
       ['Individual', 'company', 'agent'].includes(order.CustomerType)
     );
 
@@ -679,9 +683,9 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
+
     // Auto-print after content loads
-    printWindow.onload = function() {
+    printWindow.onload = function () {
       printWindow.print();
     };
 
@@ -695,15 +699,21 @@ const KitchenOrderPrint = ({ orders, onProcessing }) => {
     <div className="flex flex-col sm:flex-row gap-3">
       <button
         onClick={handleDeliveryOrder}
-        className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all 
-                  duration-200 shadow-md hover:shadow-lg font-medium text-sm sm:text-base"
+        disabled={!processed}   // 👈 disable when processed is false
+        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 
+    bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg 
+    transition-all duration-200 shadow-md font-medium text-sm sm:text-base
+    ${!processed
+            ? "opacity-50 cursor-not-allowed"  // disabled look
+            : "hover:from-red-600 hover:to-red-700 hover:shadow-lg"}`
+        }
       >
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>
         <span>Delivery Order</span>
       </button>
-      
+
       <button
         onClick={handleProcessKitchenOrder}
         className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all 

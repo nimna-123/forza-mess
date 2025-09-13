@@ -108,15 +108,15 @@ export const ADD_INDIVIDUAL = async ( data,) => {
     }
   };
 
-  export const GET_ORDERS = async () => {
-    try {
-      const response = await api.get(GET_ORDER);
-      return response.data;
-    } catch (error) {
-      console.error("API GET error:", error.response?.data || error.message);
-      throw error.response?.data || error;
-    }
-  };
+  // export const GET_ORDERS = async () => {
+  //   try {
+  //     const response = await api.get(GET_ORDER);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("API GET error:", error.response?.data || error.message);
+  //     throw error.response?.data || error;
+  //   }
+  // };
 
   export const UPDATE_ORDERS = async (data,orderId) => {
     try {

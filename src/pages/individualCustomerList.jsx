@@ -297,10 +297,10 @@ const IndividualCustomerList = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.mobile.includes(searchTerm)
+  const filteredCustomers = customers?.filter(customer =>
+    customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    
+    customer?.mobile.includes(searchTerm)
   );
 
   const startResize = (e, columnKey) => {
@@ -593,7 +593,7 @@ const IndividualCustomerList = () => {
                   </td>
                 </tr>
               ) : (
-                customers.map((customer, index) => (
+                filteredCustomers?.map((customer, index) => (
                  <tr 
                    key={customer.id} 
                    className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 last:border-b-0 cursor-pointer"
